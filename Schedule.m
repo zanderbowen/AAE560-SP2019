@@ -47,6 +47,8 @@ h=plot(G,'EdgeLabel',G.Edges.Activity);
 highlight(h,'Edges',CPEdgeIndex,'EdgeColor','r');
 highlight(h,SchStartNode,'NodeColor','g');
 highlight(h,SchEndNode,'NodeColor','r');
+set(gca,'xtick',[]);
+set(gca,'ytick',[]);
 
 %using pathbetweennodes function to find all paths between the start and finish
 %nodes
@@ -93,21 +95,21 @@ while any(isnan(G.Edges.ES)) || any(isnan(G.Edges.EF))
         for i=1:length(P)
             EF(i)=G.Edges.EF(find(ismember(G.Edges.EndNodes,[P(i) Node],'rows')));
         end
-        
+
         %check to ensure that ES and EF can be calculated then calculate
         if ~any(isnan(EF))
             G.Edges.ES(ct)=max(EF);
             G.Edges.EF(ct)=max(EF)+G.Edges.Weight(ct);
         end
     end
-    
+
     %increment counter or reset it
     if ct>=length(G.Edges.ES)
         ct=1;
     else
         ct=ct+1;
     end
-    
+
     %clear EF variable
     clear EF;
 end
@@ -132,17 +134,17 @@ while any(isnan(G.Edges.LS)) || any(isnan(G.Edges.LF))
         for i=1:length(S)
             LS(i)=G.Edges.LS(find(ismember(G.Edges.EndNodes,[Node S(i)],'rows')));
         end
-        
+
         %check to ensure that ES and EF can be calculated then calculate
         if ~any(isnan(LS))
             G.Edges.LF(ct)=min(LS);
             G.Edges.LS(ct)=min(LS)-G.Edges.Weight(ct);
         end
-        
+
         %clear LS variable
         clear LS;
     end
-    
+
     %increment counter or reset it
     if ct>=length(G.Edges.ES)
         ct=1;
