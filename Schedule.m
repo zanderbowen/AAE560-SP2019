@@ -42,6 +42,7 @@ GNeg=digraph(source,target,NegWeight);
 [CriticalPath temp CPEdgeIndex]=shortestpath(GNeg,SchStartNode,SchEndNode);
 
 %plotting the graph of the network schedule
+figure;
 h=plot(G,'EdgeLabel',G.Edges.Activity);
 %highlighting the critical path
 highlight(h,'Edges',CPEdgeIndex,'EdgeColor','r');
@@ -49,6 +50,7 @@ highlight(h,SchStartNode,'NodeColor','g');
 highlight(h,SchEndNode,'NodeColor','r');
 set(gca,'xtick',[]);
 set(gca,'ytick',[]);
+title('Schedule Network');
 
 %using pathbetweennodes function to find all paths between the start and finish
 %nodes
