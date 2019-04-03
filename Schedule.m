@@ -1,3 +1,8 @@
+% Activity on Arrow (AOA) schedule calculation. 
+% Includes a plot of the network with the edges constituiting the critical path highlighted in red.
+% To access ealy and late start/finish (ES, LS, EF, LF respectively) and total slack (TS)
+% call G.Edges table. Individual elements can be called as such: var=G.Edges.ES
+
 close all;
 clear;
 clc;
