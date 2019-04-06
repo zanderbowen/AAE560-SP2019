@@ -36,6 +36,9 @@ classdef Supervisor < handle
             %machine center
             %if (job_status == 1)
                 %disp ('job is complete, assign next job')
+            %assigned
+            %if (job_status == 1)
+                %disp ('job is complete')
             %else disp('job is incomplete')
             assign_Next = obj.Property1 + inputArg;
         end
