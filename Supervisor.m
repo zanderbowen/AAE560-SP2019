@@ -2,45 +2,42 @@ classdef Supervisor < handle
     %Releases work based on JS schedule, reports work completed
     %   Detailed explanation goes here
     
-    properties(GetAccess = 'public', SetAccess = 'public')
+    properties%(GetAccess = 'public', SetAccess = 'public')
         job_status %Value is retrieved from MachineCenter 
         next_job %Value is retrieved from JobShopSchedule
         
     end
     
     methods
-        function obj = Supervisor(job_status, next_job)
+        function SupA = Supervisor(job_status, next_job)
             %Creates an instance of the Supervisor object with properties
             %for work status and the next job released to the machine
             %center
-            obj.job_status = job_status;
-            obj.next_job = next_job;
+            SupA.job_status = get(MachineCenter,job_status);%checks current job status at Machine Center
+            SupA.next_job = get(JobShopSchedule,next_job);% checks next scheduled job in JobShopSchedule
         end
         
-        function release_Work = method1(obj,inputArg)
-            %I want to create a function here that reads from job_status  
-            %from the machine center and determines if work can be released
-            %value will be 0 or 1 for incomplete or complete, if the job is
-            %complete, work is released
-            %if (job_status == 1)
-                %disp ('job is complete')
-            %else disp('job is incomplete')
-            release_Work = obj.Property1 + inputArg;
+        function releaseWork(SupA)
+            if SupA.job_status == true
+               disp('Job x is complete, start job y');% need to point to current job in MachineCenter for x
+               set(SupA,SupA.next_job, true);
+               %set(MachineCenter,MachA.next_job, true); This probably
+               %belongs in the MachineCenter methods
+               SupA.job_status = false;
+            else
+               disp('Job x is incomplete,cannot start next job');% need to point to current job in MachineCenter for x
+               SupA.next_job = false; 
+            end           
         end
         
-          function assign_Next = method2(obj,inputArg)
-            %I want to create a function here that reads from job_status  
-            %from the machine center and determines if the last job is
-            %complete, if it is complete, the next job in the schedule is
-            %retrieved from the job shop schedule and is assigned to the
-            %machine center
-            %if (job_status == 1)
-                %disp ('job is complete, assign next job')
-            %assigned
-            %if (job_status == 1)
-                %disp ('job is complete')
-            %else disp('job is incomplete')
-            assign_Next = obj.Property1 + inputArg;
+          function workComplete(SupA)
+            if SupA.job_status == true
+               disp('Job x is complete');
+               set(JobShopSChedule,current_job, true)
+            else
+               disp('Job x incomplete');
+            end
+            
         end
             
     end
