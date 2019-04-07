@@ -30,20 +30,7 @@ classdef Director < handle
             G=digraph(source,target,weight);
 
             %adding edge names to the graph edge table
-            G.Edges.Activity=activity;
-            
-            %populate VendorPart boolean field - Will a vendor part be
-            %required prior to the start of this operation
-            G.Edges.VendorPart=ones(length(weight),1);
-            
-            %populate PartDelivered boolean field - Receiving will update
-            %this field once the Vendor has delivered the part
-            G.Edges.PartDelivered=zeros(length(weight),1);
-            
-            %populating the WorkComplete boolean field - Supervisor will
-            %update this field once one of his machines has finished the
-            %work
-            G.Edges.WorkComplete=zeros(length(weight),1);
+            G.Edges.Activity=activity;                            
             
         end
     end
