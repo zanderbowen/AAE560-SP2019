@@ -4,13 +4,12 @@ classdef WorkOrder < handle
     
     properties
         due_date
-        routing_complete=0;
         routing
         start_date
         end_date
         total_SV=0; %total schedule variance
         total_CV=0; %total cost variance
-        status
+        status %this lets one know what the status of the WO is, possibilities are (new, planned, in work, closed, canceled)
     end
     
     methods
