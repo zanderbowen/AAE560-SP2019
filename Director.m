@@ -13,7 +13,7 @@ classdef Director < handle
 %             obj.Property1 = inputArg1 + inputArg2;
         end
         
-        function G=generateRouting(obj)
+        function [G, status]=generateRouting(obj)
             %network schedule starting and ending nodes
             SchStartNode=1;
             SchEndNode=2;
@@ -57,6 +57,9 @@ classdef Director < handle
             
             %initializing schedule variance of the WO operations
             G.Edges.SV=zeros(length(weight),1);
+            
+            %set WO status to planned
+            status='planned';
             
         end
     end
