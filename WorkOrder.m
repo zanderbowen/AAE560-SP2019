@@ -8,6 +8,8 @@ classdef WorkOrder < handle
         routing
         start_date
         end_date
+        total_SV=0; %total schedule variance
+        total_CV=0; %total cost variance
     end
     
     methods
