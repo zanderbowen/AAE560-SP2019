@@ -40,6 +40,11 @@ classdef Director < handle
             %this field once the Vendor has delivered the part
             G.Edges.PartDelivered=zeros(length(weight),1);
             
+            %populating the WorkComplete boolean field - Supervisor will
+            %update this field once one of his machines has finished the
+            %work
+            G.Edges.WorkComplete=zeros(length(weight),1);
+            
         end
     end
 end
