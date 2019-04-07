@@ -10,6 +10,7 @@ classdef WorkOrder < handle
         end_date
         total_SV=0; %total schedule variance
         total_CV=0; %total cost variance
+        status
     end
     
     methods
@@ -19,6 +20,7 @@ classdef WorkOrder < handle
             if nargin == 1
                 if isnumeric(due_date) && due_date>0
                     obj.due_date=due_date;
+                    obj.status='new';
                 else
                     error('Value must be numeric or greater than zero.');
                 end

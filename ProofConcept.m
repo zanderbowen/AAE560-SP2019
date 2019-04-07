@@ -31,6 +31,6 @@ job_shop_work_orders(2).due_date=30;
 job_shop_work_orders(2).due_date
 
 for i=1:length(job_shop_work_orders)
-    job_shop_work_orders(i).routing=generateRouting(dir);
+    [job_shop_work_orders(i).routing,job_shop_work_orders(i).status]=generateRouting(dir);
     job_shop_work_orders(i).routing_complete=1;
 end
