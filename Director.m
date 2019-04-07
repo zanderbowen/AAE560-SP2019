@@ -32,6 +32,16 @@ classdef Director < handle
             %adding edge names to the graph edge table
             G.Edges.Activity=activity;                            
             
+            G.Edges.HoursWorked=zeros(length(weight),1);
+            
+            G.Edges.BudgetedCost=zeros(length(weight),1);
+            
+            G.Edges.ActualCost=zeros(length(weight),1);
+            
+            G.Edges.CV=zeros(length(weight),1);
+            
+            G.Edges.SV=zeros(length(weight),1);
+            
         end
     end
 end
