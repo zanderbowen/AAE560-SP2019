@@ -25,21 +25,37 @@ classdef Director < handle
             %weights - duration of the activity
             weight=[2 2];
             %Activity (Edge) Name
-            activity={'A'; 'B'};
-
+            operation={'A'; 'B'};
+            
+            %creation of the digraph object which contains the routing for
+            %the WO
             G=digraph(source,target,weight);
 
             %adding edge names to the graph edge table
-            G.Edges.Activity=activity;                            
+            G.Edges.Operation=operation;                            
             
+            %initializing the Vendor part required  column
+            G.Edges.VendorPart=zeros(length(weight),1);
+            
+            %initializing the Vendor part delivered column
+            G.Edges.PartDelivered=zeros(length(weight),1);
+            
+            %initializing the operation complete column column
+            G.Edges.WorkComplete=zeros(length(weight),1);
+            
+            %initializing the WO hours worked column
             G.Edges.HoursWorked=zeros(length(weight),1);
             
+            %initializing the budgeted cost of the WO
             G.Edges.BudgetedCost=zeros(length(weight),1);
             
+            %initializing the actual cost of the WO
             G.Edges.ActualCost=zeros(length(weight),1);
             
+            %initializing the cost variance of the WO operations
             G.Edges.CV=zeros(length(weight),1);
             
+            %initializing schedule variance of the WO operations
             G.Edges.SV=zeros(length(weight),1);
             
         end
