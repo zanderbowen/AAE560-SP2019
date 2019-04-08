@@ -9,14 +9,12 @@ classdef Vendor < handle
  
 
  function checkWorkOrder
-    import WorkOrder
-    import Schedule
     
-   get.WorkOrder(vendor_part);
-    If (vendor_part = 1)
+   handel.vendor_part_needed;
+    If (vendor_part_needed = 1)
         get.Schedule(work_order_schedule_time);
         
-        work_order_schedule_time = delivery_time;
+         delivery_time = handel.work_order_schedule_time;
  end
  
  %Read the schedule to see when to deliver the part
