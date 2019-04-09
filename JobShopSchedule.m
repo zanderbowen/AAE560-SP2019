@@ -1,28 +1,13 @@
 classdef JobShopSchedule < handle
-    %Holds scheduled jobs and job order
-    %   Detailed explanation goes here
+    %Job Shop Schedule class, holds job schedule
     
     properties
-        current_job
-        next_job
-        job_status
+        next_job %This is place holder for our first run, noted Wiki entry that an array will occupy this space.
     end
     
     methods
-        function obj = JobShopSchedule(current_job,next_job,job_status)
-            %Creates JS Schedule object
-            %Holds properties for current job, next job in the schedule and
-            %the status of the current job in the schedule
-            obj.current_job = current_job;
-            obj.next_job = next_job;
-            obj.job_status = job_status;
+        function obj = JobShopSchedule %Creates job shop schedule object
         end
-        
-        %function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            %outputArg = obj.Property1 + inputArg;
-        %end
     end
 end
 
