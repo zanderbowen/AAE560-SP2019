@@ -1,45 +1,31 @@
 classdef Supervisor < handle
-    %Releases work based on JS schedule, reports work completed
-    %   Detailed explanation goes here
+    %Creates the Supervisor class
+    %   Releases work to Machine Center, reports Work Complete to Work
+    %   Order
     
-    properties%(GetAccess = 'public', SetAccess = 'public')
-        job_status %Value is retrieved from MachineCenter 
-        next_job %Value is retrieved from JobShopSchedule
-        
+    properties
+       start_next %start_next is read by the machine_center, it is determined by current job_status and availability of next_job
+       job_done %job_done is determined by the status of the current job in the machine center
     end
     
     methods
-        function SupA = Supervisor(job_status, next_job)
-            %Creates an instance of the Supervisor object with properties
-            %for work status and the next job released to the machine
-            %center
-            SupA.job_status = get(MachineCenter,job_status);%checks current job status at Machine Center
-            SupA.next_job = get(JobShopSchedule,next_job);% checks next scheduled job in JobShopSchedule
+        function obj = Supervisor %Creates supervisor object
         end
         
-        function releaseWork(SupA)
-            if SupA.job_status == true
-               disp('Job x is complete, start job y');% need to point to current job in MachineCenter for x
-               set(SupA,SupA.next_job, true);
-               %set(MachineCenter,MachA.next_job, true); This probably
-               %belongs in the MachineCenter methods
-               SupA.job_status = false;
+        function s = ReleaseWork(obj,job_status,next_job)
+            
+            if job_status == true && next_job == true %if both job_status and next_job are true, Machine shop can start another job and the current job is marked as complete in the WO
+               obj.start_next = true;
+               disp("Start next job")
+               obj.job_done = true;
+               disp("The current job has been completed")
             else
-               disp('Job x is incomplete,cannot start next job');% need to point to current job in MachineCenter for x
-               SupA.next_job = false; 
-            end           
-        end
-        
-          function workComplete(SupA)
-            if SupA.job_status == true
-               disp('Job x is complete');
-               set(JobShopSChedule,current_job, true)
-            else
-               disp('Job x incomplete');
+               obj.start_next = false;
+               disp("Current job incomplete, cannot start next job")
+               obj.job_done = false;
+               disp("The current job is still in work")
             end
-            
+            s = obj.start_next;
         end
-            
     end
 end
-
