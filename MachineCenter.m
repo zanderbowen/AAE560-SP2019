@@ -24,6 +24,11 @@ classdef MachineCenter < handle
         %turn all non-zeros to 1
         machines_running = logical(machines_running);
         %%Now the matrix "machines_running" is an array of 1s and 0s depending on whether that machine is free to do work.
+        if(sum(machines_running) = 0)
+            warning_flag = 1;
+         else
+            warning_flag = 0;
+          end
        end
     
     
