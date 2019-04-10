@@ -7,40 +7,43 @@ classdef Receiving < handle
     %If parts have been delivered, mark them as delivered in appropriate place in routing and activity. After parts have been delivered, clear the part_delivered property
    
                 
-  properties(GetAccess = 'public', SetAccess ='public');
+  properties
+    (GetAccess = 'public', SetAccess ='public');
  
-    vendor_part_received = 0; %dependent on Vendor class "Deliver parts()". Default of 0, parts not received
+    vendor_part_received %Receiving status based on vendor reported delivery status
  
   end 
 
 methods  %Note: can call method by either obj.methodName(arg) OR methodName(obj,arg)
        
-      function obj = Receiving(vendor_part_received)
-            %Creates an instance of the Receiving object with properties for vendor part received status            
-        obj.vendor_part_received = vendor_part_received;
-
+      function obj = Receiving  %Creates an instance of the Receiving object            
+      
       end
          
-      %functions are output = methodname(obj, arg)
+           
+      %Check read status of vendor part delivery from vendor class and then update work order
       
-      %Check status of vendor part
-      function report_vendor_part_status = reportVendorDeliveryStatus(obj,vendor_part_delivery_status) %Update variable name to to match what's called in Vendor class
-          import Vendor
-          import WorkOrder
-          get.Vendor(vendor_part_delivery_status); %No clue if this is how you actually read value from another class? I know it works when reading from a file
-          
-          if vendor_part_delivery_status == 1 
-                obj.vendor_part_received = 1;
+      function receiving_status = ReportVendorDeliveryStatus(obj,vendor_part_delivery_status) %Check if part has been deliverer from vendor class
+                 %Update variable name (vendor_part_delivery_status) to to match what it's called in vendor class
+                    
+          if vendor_part_delivery_status == 1 %Using logical, 1 = delivered, 0 = not delivered
+                obj.vendor_part_received = 1; %Check
+                disp("Vendor part delivered to receiving");
             else
-                obj.vendor_part_received = 0;
+                obj.vendor_part_received = 0; %Noted that not received
+                disp("Vendor part not delivered to receivign");
           end 
           
+          %Update status of vendor part status in work order for activity/operationg and routing
+          
           if obj.vendor_part_received == 1
-              set.WorkOrder(vendor_part_operation_complete) = 1; %Update variable to match what's called in WorkOrder class, assuming 1 = completed
-              set.WorkOrder(vendor_part_routing_complete) = 1;  %Update variable to match what's called in WorkOrder class, assuming 1 = completed
+              obj.vendor_part_operation_complete = 1; %Update variable to match what's called in WorkOrder class, logical 1 = completed 
+              obj.vendor_part_routing_complete = 1;  %Update variable to match what's called in WorkOrder class, logical 1 = completed
+              disp("Work Order vendor part operation and routing marked complete");
           else
-              set.WorkOrder(vendor_part_operation_complete) = 0;
-              set.WorkOrder(vendor_part_routing_complete) = 0;
+              obj.vendor_part_operation_complete = 0;
+              obj.vendor_part_routing_complete = 0;
+              disp("Work Order vendor part operation and routing marked incomplete");
           end
          
          %Clear part received status to prepare for assess status of next incoming vendor part
