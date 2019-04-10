@@ -42,6 +42,8 @@ classdef MachineCenter < handle
             %%subtract 1 hour worked from the work needed on the work order
             obj.work_needed = obj.work_needed - 1;
            end
+           
+           %flags the supervisor as to whether or not the job is complete
         if(obj.work_needed <= 0)
              job_status = true;
         else
