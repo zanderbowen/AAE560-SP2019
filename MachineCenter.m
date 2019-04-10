@@ -2,39 +2,37 @@ classdef MachineCenter < handle
     %%overtime is ignored in this version
     
     properties
-       machines_running       %array that flags which machines are working
-       machine_hours         %total hours worked
-       max_machine_hours     %maximum hours alowed by the supervisor
-       number_of_machines = 1 %number of machines (can be varied)
-        
+       machines_running                                  %array that flags which machines are working
+       number_of_machines = 1                            %number of machines (can be varied)
+       machine_hours = zeros(1,number_of_machines);      %array of total hours worked
+       max_machine_hours                                 %maximum hours alowed by the supervisor
+       warning_flag = 0       %if no machines can work set up a flag to alert the supervisor 
     end
     
-    %first update the array with which machines can work
+    
     methods
-       function whichMachinesCanWork
+    
+      %first update the array with which machines can work
+      function whichMachinesCanWork
         %get the max machine hours from the supervisor
         max_machine_hours = Supervisor.max_hours; %%   <-----One supervisor? Can we specify this machine center's supervisor?
         
-    
-    if (max_machine_hours > hours_machine_A1)
-        machine_A1 = 1;
-    end
-    
-    end
-    
-    %Next check if there are any jobs for machine_A1
-    function workingHours
-      import WorkOrder
-       get.WorkOrder(job_A_hours);
-    
-           %if A1 can work...
-          if (machine_A1 == 1)
-          %it takes 1 hours off of Job A
-          job_A_hours = job_A_hours - 1;
-          %records 1 hour worked in its log for the Supervisor
-          hours_machine_A1 = hours_machine_A1 + 1;
-          end
+        %check which machines still have time left
+        machines_running = machine_hours - max_machine_hours;
+        %turn the negative values to zero
+        machines_running = .5*(abs(machines_running)+machines_running);
+        %turn all non-zeros to 1
+        machines_running = logical(machines_running);
+        %%Now the matrix "machines_running" is an array of 1s and 0s depending on whether that machine is free to do work.
        end
+    
+    
+    %Next check if there is any work to be done
+    function getToWork
+       
+
+      end
+      
     end
    end 
     
