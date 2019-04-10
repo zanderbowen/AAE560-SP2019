@@ -6,7 +6,7 @@ classdef MachineCenter < handle
        number_of_machines = 1                            %number of machines (can be varied)
        machine_hours = zeros(1,number_of_machines);      %array of total hours worked
        max_machine_hours                                 %maximum hours alowed by the supervisor
-       warning_flag = 0          %if no machines can work set up a flag to alert the supervisor 
+       warning_flag = false          %if no machines can work set up a flag to alert the supervisor 
        job_status                                        %lets the supervisor know that the job is finished
     end
     
@@ -25,10 +25,11 @@ classdef MachineCenter < handle
         %turn all non-zeros to 1
         machines_running = logical(machines_running);
         %%Now the matrix "machines_running" is an array of 1s and 0s depending on whether that machine is free to do work.
+        %%warn the supervisor if no machines are running
         if(sum(machines_running) = 0)
-            warning_flag = 1;
+            warning_flag = true;
          else
-            warning_flag = 0;
+            warning_flag = false;
           end
        end
     
