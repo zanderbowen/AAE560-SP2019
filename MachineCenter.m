@@ -7,6 +7,7 @@ classdef MachineCenter < handle
        machine_hours = zeros(1,number_of_machines);      %array of total hours worked
        max_machine_hours                                 %maximum hours alowed by the supervisor
        warning_flag = 0          %if no machines can work set up a flag to alert the supervisor 
+       job_status                                        %lets the supervisor know that the job is finished
     end
     
     
@@ -35,13 +36,17 @@ classdef MachineCenter < handle
     %Next check if there is any work to be done
     function getToWork
     
-       if(obj.work_needed > 0)%%% This might need altering depending on what the work order calls it
+       if(obj.work_needed > 0 && Supervisor.start_next == true)%%% This might need altering depending on what the work order calls it
           %%Divide the hours among the working machines and then update the hours 
           machine_hours = machine_hours + (1/sum(machines_running))*machines_running;
             %%subtract 1 hour worked from the work needed on the work order
             obj.work_needed = obj.work_needed - 1;
            end
-
+        if(obj.work_needed <= 0)
+             job_status = true;
+        else
+             job_status = false;
+         end
       end
       
     end
