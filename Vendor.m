@@ -36,7 +36,7 @@ methods
           %reset the waiting to send flag
           waiting_to_send = 0;
           %%%%%% Question: can I just change the work order variable like this so that the work order doesn't want anymore?
-          obj.vendor_part_needed == 0;
+          obj.vendor_part_needed = 0;
         
         end
      end
