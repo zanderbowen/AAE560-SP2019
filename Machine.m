@@ -9,6 +9,8 @@ classdef Machine < handle
        max_machine_hours                                 %maximum hours alowed by the supervisor
        waiting_on_part                                   %waiting for part from vendor
        job_status                                        %lets the supervisor know that the job is finished
+       work_needed                                       %variable to be set by the supervisor
+       
     end
     
     method
@@ -19,13 +21,13 @@ classdef Machine < handle
          
          if(max_machine_hours > machine_hours)
                      %%% Supervisor(functional_class) is how I'm naming the supervisor that it is listening too for the moment
-          if(obj.work_needed > 0 && Supervisor(functional_class).start_next == true) %%% This needs altering depending on how the work order tracks hours needed
+          if(work_needed > 0 && Supervisor(functional_class).start_next == true) 
                 if(waiting_on_part == false)
                      machine_idle = false:
                      machine_running = true;
                      machine_hours = machine_hours + 1;
-                     %%subtract 1 hour worked from the work needed on the work order
-                     obj.work_needed = obj.work_needed - 1;       %%% This needs altering depending on how the work order tracks hours
+                     %%subtract 1 hour worked from the work needed on the project
+                     work_needed = work_needed - 1;      
                 
                 else
                      machine_idle = true;
@@ -43,7 +45,7 @@ classdef Machine < handle
           end
           
           %flags the supervisor as to whether or not the job is complete
-          if(obj.work_needed <= 0)              %%% This needs altering depending on how the work order tracks hours
+          if(work_needed <= 0)             
                job_status = true;
            else
                job_status = false;
