@@ -2,6 +2,7 @@ classdef Vendor < handle
     
     properties
   
+        unique_id % unique identifier for each instantiated vendor object
         delivery_time = 0 %variable to hold the due date for this part
         part_delivered = 0 %true (1) or false (2) variable to say whether the part was delivered
         waiting_to_send = 0 %variable that tells the timer to keep checking till the part is sent

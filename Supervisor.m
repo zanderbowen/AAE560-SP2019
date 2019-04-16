@@ -6,6 +6,7 @@ classdef Supervisor < handle
     properties
        start_next %start_next is read by the machine_center, it is determined by current job_status and availability of next_job
        job_done %job_done is determined by the status of the current job in the machine center
+       functional_group %this is the letter of the group of machine functions that the supervisor oversees, it also corresponds to the Routing/operation an individual machine performs
     end
     
     methods

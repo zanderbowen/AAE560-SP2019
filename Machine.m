@@ -2,7 +2,8 @@ classdef Machine < handle
 
     
     properties
-       functional_class                                  %property that assigns the machine to a specific class and therefore a supervisor
+       functional_group                                  %property that assigns the machine to a specific class and therefore a supervisor
+       machine_number                                    %unique idenifer for each machine object instantiated
        machine_idle                                      %flag that says the machine is available for work but not working
        machine_running                                   %flag that says whether the machine is running
        machine_hours                                     %total hours worked
