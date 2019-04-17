@@ -26,6 +26,9 @@ classdef WorkOrder < handle
             end
         end
         
+        %a method to for the customer class to instantiate a new work
+        %order- I think that Matt may have a way to do this from the
+        %customer class???
         function obj=genWO(obj,new_wo,new_wo_due_date)
             if new_wo==1
                 obj=[obj; WorkOrder(new_wo_due_date)];
