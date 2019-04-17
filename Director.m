@@ -22,7 +22,7 @@ classdef Director < handle
             source=[1 3];
             %target node - node 3 is the finish node
             target=[3 2];
-            %weights - duration of the activity
+            %weights - ***duration of the activity***
             weight=[2 2];
             %Activity (Edge) Name
             operation={'A'; 'B'};
@@ -62,5 +62,7 @@ classdef Director < handle
             status='planned';
             
         end
+        
+        %method to add all routings to the master schedule
     end
 end
