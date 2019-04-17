@@ -1,5 +1,6 @@
 clear;
 clc;
+close all;
 
 %instantiate customer object
 cust=Customer(0,0);
@@ -44,7 +45,7 @@ end
 js_sch=JobShopSchedule;
 
 %add WOs to master schedule
-js_sch.master_schedule=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+[js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
 %plotting the graph of the network schedule
 figure;
 h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
