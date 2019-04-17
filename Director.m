@@ -22,7 +22,7 @@ classdef Director < handle
             source=[1 3];
             %target node - node 3 is the finish node
             target=[3 2];
-            %weights - duration of the activity
+            %weights - ***duration of the activity***
             weight=[2 2];
             %Activity (Edge) Name
             operation={'A'; 'B'};
@@ -62,5 +62,19 @@ classdef Director < handle
             status='planned';
             
         end
+        
+        %method to add all routings to the master schedule by calling a
+        %method passing inputs and calling a method on JobShopSchedule
+        function [add_master_ids]=masterSchedule(obj, wo_obj_array)
+            %the wo_obj_array is passed into this method
+            
+            %find the objects where master_schedule=0
+            add_master=findobj(wo_obj_array,'master_schedule',0);
+            
+            %extract vector of WO unique identifiers that need to be added
+            %to master schedule
+            add_master_ids=[add_master.unique_id];
+        end
+            
     end
 end
