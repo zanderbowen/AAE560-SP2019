@@ -12,26 +12,44 @@ cust.new_wo=1;
 cust.new_wo_due_date=10;
 
 %instantiate a job shop work orders variable
-job_shop_work_orders=WorkOrder.empty;
+js_wos=WorkOrder.empty;
 
 %instantiate job shop work order
-job_shop_work_orders=genWO(job_shop_work_orders,cust.new_wo,cust.new_wo_due_date);
+js_wos=genWO(js_wos,cust.new_wo,cust.new_wo_due_date,[js_wos.unique_id]);
 
 %setting properties in customer to tell WO to generate more WOs
 cust.new_wo=1;
 cust.new_wo_due_date=20;
 
 %make this an array of WorkOrder objects
-job_shop_work_orders=genWO(job_shop_work_orders,cust.new_wo,cust.new_wo_due_date);
+js_wos=genWO(js_wos,cust.new_wo,cust.new_wo_due_date,[js_wos.unique_id]);
 
 %change due date to the second WO
-job_shop_work_orders(2).due_date=30;
+js_wos(2).due_date=30;
 
 %access the second work order due date - as a check
-job_shop_work_orders(2).due_date
+js_wos(2).due_date
 
-for i=1:length(job_shop_work_orders)
-    if strcmp(job_shop_work_orders(i).status,'new')
-        [job_shop_work_orders(i).routing,job_shop_work_orders(i).status]=generateRouting(dir);
+for i=1:length(js_wos)
+    if strcmp(js_wos(i).status,'new')
+        [js_wos(i).routing,js_wos(i).status]=generateRouting(dir);
+    end
+    
+    if strcmp(js_wos(i).status,'planned')
+        [js_wos(i).start_date js_wos(i).cp_duration]=calculateStartDate(js_wos(i));
     end
 end
+
+%instantiate Job Shop schedule object
+js_sch=JobShopSchedule;
+
+%add WOs to master schedule
+js_sch.master_schedule=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+%plotting the graph of the network schedule
+figure;
+h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+%try to layout the graph a little more like a Gantt Chart
+layout(h,'layered','Direction','right','Sources',1);
+%layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+[HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+%needs some work... labelnode(h,unique([source target]),HideNodeNames);
