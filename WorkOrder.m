@@ -41,7 +41,8 @@ classdef WorkOrder < handle
         %customer class???
         function obj=genWO(obj,new_wo,new_wo_due_date,vec_u_id)
             if new_wo==1
-                obj=[obj; WorkOrder(new_wo_due_date,vec_u_id)];
+                wo=WorkOrder(new_wo_due_date,vec_u_id);
+                obj=[obj; wo];
             end
         end
         
