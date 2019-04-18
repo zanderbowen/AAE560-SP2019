@@ -200,6 +200,9 @@ classdef JobShopSchedule < handle
                 end
                 %*** End Add Operations Master Schedule***
                 
+                %*** Perform Forward Pass - Calculate Early Start/Finish
+                %*** End Forward Pass ***
+                
             end
             
 
