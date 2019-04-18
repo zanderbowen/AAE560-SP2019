@@ -19,13 +19,13 @@ classdef Director < handle
             SchEndNode=2;
 
             %source node - node 1 is the start of the schedule
-            source=[1 3];
+            source=[1 3 4];
             %target node - node 3 is the finish node
-            target=[3 2];
+            target=[3 4 2];
             %weights - ***duration of the activity***
-            weight=[2 2];
+            weight=[2 2 2];
             %Activity (Edge) Name
-            operation={'A'; 'B'};
+            operation={'A'; 'B'; 'C'};
             
             %creation of the digraph object which contains the routing for
             %the WO
