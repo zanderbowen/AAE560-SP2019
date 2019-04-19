@@ -60,6 +60,14 @@ classdef WorkOrder < handle
             cp_duration=abs(cp_distance);
         end
         
+        function obj=updateDates(obj,revised_wo_dates)
+            for i=1:length(revised_wo_dates.id)
+                obj(revised_wo_dates.id(i)).start_date=revised_wo_dates.start_date(i);
+                obj(revised_wo_dates.id(i)).end_date=revised_wo_dates.end_date(i);
+                obj(revised_wo_dates.id(i)).master_schedule=1;
+            end
+        end
+        
         %method to calculate SV and CV
         %baseline will have supervisor push working hours after job is
         %complete - qualitiative approach that is typical in most shops

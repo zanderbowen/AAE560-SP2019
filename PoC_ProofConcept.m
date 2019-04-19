@@ -12,52 +12,43 @@ dir=Director();
 cust.new_wo=1;
 cust.new_wo_due_date=10;
 
-%instantiate a job shop work orders variable
+%instantiate a job shop work order object array
 js_wos=WorkOrder.empty;
 
-%instantiate job shop work order
+%add a job shop work order to the array - #1
 js_wos=genWO(js_wos,cust.new_wo,cust.new_wo_due_date,[js_wos.unique_id]);
 
 %setting properties in customer to tell WO to generate more WOs
 cust.new_wo=1;
 cust.new_wo_due_date=20;
 
-%make this an array of WorkOrder objects
+%add a job shop work order to the array - #2
 js_wos=genWO(js_wos,cust.new_wo,cust.new_wo_due_date,[js_wos.unique_id]);
 
-%change due date to the second WO
-js_wos(2).due_date=30;
-
-%access the second work order due date - as a check
-js_wos(2).due_date
-
+%generate routing for new WOs, for planned WOs calcuated the critical path
 for i=1:length(js_wos)
     if strcmp(js_wos(i).status,'new')
         [js_wos(i).routing,js_wos(i).status]=generateRouting(dir);
     end
     
-    if strcmp(js_wos(i).status,'planned')
+    if strcmp(js_wos(i).status,'planned') && js_wos(i).master_schedule==0
         [js_wos(i).start_date js_wos(i).cp_duration]=calculateStartDate(js_wos(i));
     end
 end
 
-%instantiate Job Shop schedule object
+%instantiate Job Shop Schedule object
 js_sch=JobShopSchedule(0);
 
 %add WOs to master schedule
 [js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
-
-%cludge to set js_wos.master_schedule to 1
-temp=findobj(js_wos,'master_schedule',0);
-for i=1:length(temp)
-    js_wos(temp(i).unique_id).master_schedule=1;
-end
+%update start and end dates and master_schedule flag
+js_wos=updateDates(js_wos,revised_wo_dates);
 
 %setting properties in customer to tell WO to generate more WOs
 cust.new_wo=1;
 cust.new_wo_due_date=20;
 
-%make this an array of WorkOrder objects
+%add a job shop work order to the array - #3
 js_wos=genWO(js_wos,cust.new_wo,cust.new_wo_due_date,[js_wos.unique_id]);
 
 for i=1:length(js_wos)
@@ -65,13 +56,15 @@ for i=1:length(js_wos)
         [js_wos(i).routing,js_wos(i).status]=generateRouting(dir);
     end
     
-    if strcmp(js_wos(i).status,'planned')
-        [js_wos(i).start_date js_wos(i).cp_duration]=calculateStartDate(js_wos(i));
+    if strcmp(js_wos(i).status,'planned') && js_wos(i).master_schedule==0
+        [js_wos(i).start_date,js_wos(i).cp_duration]=calculateStartDate(js_wos(i));
     end
 end
 
 %add new WO to master schedule
 [js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+%update start and end dates and master_schedule flag
+js_wos=updateDates(js_wos,revised_wo_dates);
 
 %plotting the graph of the network schedule
 figure;

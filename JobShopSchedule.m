@@ -88,116 +88,27 @@ classdef JobShopSchedule < handle
 
                         if rout_source==1 && rout_target~=2 %edge is the first routing operation
                             %add in start lead edge
-                            source=obj.start_node;
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            weight=revised_wo_dates.start_date(i);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=['Start.Lead.',num2str(u_id),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=['StartLead'];
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN tempG.Edges.EndNodes(j,1)];
-
+                            master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule);
                             %add the first operation to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            weight=tempG.Edges.Weight(j);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=[num2str(u_id),'.',char(tempG.Edges.Operation(j)),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
+                            master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+
                         elseif rout_source~=1 && rout_target==2 %edge is the last routing operation
                             %add the last operation to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            weight=tempG.Edges.Weight(j);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=[num2str(u_id),'.',char(tempG.Edges.Operation(j)),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
-
+                            master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                             %add the end lag edge to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            target=obj.end_node;
-                            weight=0;
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=['End.Lag.',num2str(u_id)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}='EndLag';
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
+                            master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule);
+
                         elseif rout_source==1 && rout_target==2 %single operation in the routing
                             %add in start lead edge
-                            source=obj.start_node;
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            weight=revised_wo_dates.start_date(i);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=['Start.Lead.',num2str(u_id),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=['StartLead'];
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN tempG.Edges.EndNodes(j,1)];
-
+                            master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule);
                             %add the only operation to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            weight=tempG.Edges.Weight(j);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=[num2str(u_id),'.',char(tempG.Edges.Operation(j)),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
-
+                            master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                             %add the end lag edge to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            target=obj.end_node;
-                            weight=0;
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=['End.Lag.',num2str(u_id)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}='EndLag';
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
+                            master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+                            
                         else %for all other operations in the WO
                             %add the operation to the schedule
-                            source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
-                            target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
-                            weight=tempG.Edges.Weight(j);
-                            master_schedule=addedge(master_schedule,source,target,weight);
-                            %find new edge index
-                            edge_index=findedge(master_schedule,source,target);
-                            %adding edge labels to the master schedule Edges table
-                            master_schedule.Edges.EdgeLabel{edge_index}=[num2str(u_id),'.',char(tempG.Edges.Operation(j)),'=',num2str(weight)];
-                            %adding additional routing information to the Edges table
-                            master_schedule.Edges.EdgeWO(edge_index)=u_id;
-                            master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
-                            master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
+                            master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                         end
 
                     end
@@ -326,4 +237,50 @@ classdef JobShopSchedule < handle
 %             end
         end
     end
+end
+
+function master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule)
+    %add in start lead edge
+    source=obj.start_node;
+    target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
+    weight=revised_wo_dates.start_date(i);
+    master_schedule=addedge(master_schedule,source,target,weight);
+    %find new edge index
+    edge_index=findedge(master_schedule,source,target);
+    %adding edge labels to the master schedule Edges table
+    master_schedule.Edges.EdgeLabel{edge_index}=['Start.Lead.',num2str(u_id),'=',num2str(weight)];
+    %adding additional routing information to the Edges table
+    master_schedule.Edges.EdgeWO(edge_index)=u_id;
+    master_schedule.Edges.OperationWO{edge_index}=['StartLead'];
+    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN tempG.Edges.EndNodes(j,1)];
+end
+
+function master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule)
+    source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,1))]};
+    target={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
+    weight=tempG.Edges.Weight(j);
+    master_schedule=addedge(master_schedule,source,target,weight);
+    %find new edge index
+    edge_index=findedge(master_schedule,source,target);
+    %adding edge labels to the master schedule Edges table
+    master_schedule.Edges.EdgeLabel{edge_index}=[num2str(u_id),'.',char(tempG.Edges.Operation(j)),'=',num2str(weight)];
+    %adding additional routing information to the Edges table
+    master_schedule.Edges.EdgeWO(edge_index)=u_id;
+    master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
+    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
+end
+
+function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
+    source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
+    target=obj.end_node;
+    weight=0;
+    master_schedule=addedge(master_schedule,source,target,weight);
+    %find new edge index
+    edge_index=findedge(master_schedule,source,target);
+    %adding edge labels to the master schedule Edges table
+    master_schedule.Edges.EdgeLabel{edge_index}=['End.Lag.',num2str(u_id)];
+    %adding additional routing information to the Edges table
+    master_schedule.Edges.EdgeWO(edge_index)=u_id;
+    master_schedule.Edges.OperationWO{edge_index}='EndLag';
+    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
 end
