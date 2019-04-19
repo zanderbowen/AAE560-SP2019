@@ -67,10 +67,19 @@ end
 js_wos=updateDates(js_wos,revised_wo_dates);
 
 %plotting the graph of the network schedule
-figure;
-h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-%try to layout the graph a little more like a Gantt Chart
-layout(h,'layered','Direction','right','Sources',1);
-%layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-[HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+% figure;
+% h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+% %try to layout the graph a little more like a Gantt Chart
+% layout(h,'layered','Direction','right','Sources',1);
+% %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+% [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
 %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+
+%instantiate a an empty object array of class Supervisor
+sup=Supervisor.empty;
+
+%add a supervisor object to the array - A
+sup=[sup; Supervisor('A')];
+
+%have the supervisors get the job queues from the master schedule
+sup=getWork(sup,js_sch.master_schedule.Edges);
