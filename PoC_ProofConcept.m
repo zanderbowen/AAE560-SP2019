@@ -42,7 +42,7 @@ for i=1:length(js_wos)
 end
 
 %instantiate Job Shop schedule object
-js_sch=JobShopSchedule;
+js_sch=JobShopSchedule(0);
 
 %add WOs to master schedule
 [js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
