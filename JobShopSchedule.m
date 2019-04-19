@@ -6,14 +6,16 @@ classdef JobShopSchedule < handle
         master_schedule %directed graph that contains the master schedule
         start_node %the starting node number
         end_node %the ending node number
+        sch_res %a buffer between work orders to provide ability to deliver on time
     end
     
     methods
-        function obj = JobShopSchedule() %Job Shop Schedule constructor method
+        function obj = JobShopSchedule(sch_res) %Job Shop Schedule constructor method
             %create an empty directed graph
             obj.master_schedule=digraph([],[]);
             obj.start_node={'Start'};
             obj.end_node={'End'};
+            obj.sch_res=sch_res;
         end
         
         %add WOs to Job Shop master schedule
@@ -38,7 +40,9 @@ classdef JobShopSchedule < handle
                 else %find the critical path through the existing master schedule to determine t_start if the master schedule already has work in it
                     temp_cp=master_schedule;
                     temp_cp.Edges.Weight=-temp_cp.Edges.Weight;
-                    [cp_nodes t_start cp_edge_indicies]=shortestpath(temp_cp,{'Start'},{'End'});
+                    [cp_nodes t_start cp_edge_indicies]=shortestpath(temp_cp,obj.start_node,obj.end_node);
+                    %output from shortest path is a negative duration
+                    t_start=abs(t_start)+obj.sch_res;
                 end
                 
                 %*** Serialize Work Orders *** applies FIFO scheduling based on due date
@@ -51,11 +55,11 @@ classdef JobShopSchedule < handle
                         %populate a structure with revised information
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=t_start;
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
                     else
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=revised_wo_dates.end_date(i-1);
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
                     end
                 end
                 %*** End Work Order Serialization***
@@ -199,6 +203,120 @@ classdef JobShopSchedule < handle
                     end
                 end
                 %*** End Add Operations Master Schedule***
+                
+                %fill the graph edges table with NaN values for ES, EF, LS & LF
+                
+                %pre-populate early/late start
+                master_schedule.Edges.ES=NaN([length(master_schedule.Edges.Weight) 1]);
+                master_schedule.Edges.LS=NaN([length(master_schedule.Edges.Weight) 1]);
+
+                %pre-populate early/late finish
+                master_schedule.Edges.EF=NaN([length(master_schedule.Edges.Weight) 1]);
+                master_schedule.Edges.LF=NaN([length(master_schedule.Edges.Weight) 1]);
+                
+                %*** Perform Forward Pass - Calculate Early Start/Finish
+                s=successors(master_schedule,obj.start_node);
+                for i=1:length(s)
+                    for j=1:length(master_schedule.Edges.Weight)
+                        if strcmp(master_schedule.Edges.EndNodes(j,1),obj.start_node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
+                            master_schedule.Edges.ES(j)=0;
+                            master_schedule.Edges.EF(j)=master_schedule.Edges.Weight(j);
+                        end
+                    end
+                end
+                
+                %brute force loop through remaining edges to calculate ES and EF
+                ct=1;
+                while any(isnan(master_schedule.Edges.ES)) || any(isnan(master_schedule.Edges.EF))
+                    if isnan(master_schedule.Edges.ES(ct)) || isnan(master_schedule.Edges.EF(ct))
+                        %check preceeding edges have EF calculated
+                        node=master_schedule.Edges.EndNodes(ct,1);
+                        p=predecessors(master_schedule,node);
+                        for i=1:length(p)
+                            for j=1:length(master_schedule.Edges.Weight)
+                                if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),node)
+                                    EF(i)=master_schedule.Edges.EF(j);
+                                end
+                            end
+                        end
+
+                        %check to ensure that ES and EF can be calculated then calculate
+                        if ~any(isnan(EF))
+                            master_schedule.Edges.ES(ct)=max(EF);
+                            master_schedule.Edges.EF(ct)=max(EF)+master_schedule.Edges.Weight(ct);
+                        end
+                    end
+
+                    %increment counter or reset counter
+                    if ct>=length(master_schedule.Edges.ES)
+                        ct=1;
+                    else
+                        ct=ct+1;
+                    end
+
+                    %clear EF variable
+                    clear EF;
+                end
+                %*** End Forward Pass ***
+                
+                %*** Perform Backward Pass - Calculate Late Start/Finish
+
+                p=predecessors(master_schedule,obj.end_node);
+                for i=1:length(p)
+                    for j=1:length(master_schedule.Edges.Weight)
+                        if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),obj.end_node)
+                            %typically late finish would be calc as follows
+                            %master_schedule.Edges.LF(j)=max(master_schedule.Edges.EF);
+                            %however all End Lag edges are set to zero
+                            %therefore the EF for the particular edge is used instead of the maximum function
+                            %the if statement ensures that the first task can't start the sch_res late and alread eat up all of the management reserve
+                            if master_schedule.Edges.EF(j)==0
+                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
+                            else
+                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j)+obj.sch_res;
+                            end
+                            master_schedule.Edges.LS(j)=master_schedule.Edges.LF(j)-master_schedule.Edges.Weight(j);
+                        end
+                    end
+                end
+                
+                %brute force loop through remaining edges to calculate LS and LF
+                ct=1;
+                while any(isnan(master_schedule.Edges.LS)) || any(isnan(master_schedule.Edges.LF))
+                    if isnan(master_schedule.Edges.LS(ct)) || isnan(master_schedule.Edges.LF(ct))
+                        %check preceeding edges have EF calculated
+                        node=master_schedule.Edges.EndNodes(ct,2);
+                        s=successors(master_schedule,node);
+                        for i=1:length(s)
+                            for j=1:length(master_schedule.Edges.Weight)
+                                if strcmp(master_schedule.Edges.EndNodes(j,1),node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
+                                    LS(i)=master_schedule.Edges.LS(j);    
+                                end
+                            end
+%                             LS(i)=master_schedule.Edges.LS(find(ismember(G.Edges.EndNodes,[node s(i)],'rows')));
+                        end
+
+                        %check to ensure that ES and EF can be calculated then calculate
+                        if ~any(isnan(LS))
+                            master_schedule.Edges.LF(ct)=min(LS);
+                            master_schedule.Edges.LS(ct)=min(LS)-master_schedule.Edges.Weight(ct);
+                        end
+
+                        %clear LS variable
+                        clear LS;
+                    end
+
+                    %increment counter or reset it
+                    if ct>=length(master_schedule.Edges.ES)
+                        ct=1;
+                    else
+                        ct=ct+1;
+                    end
+                end
+                %*** End Backward Pass ***
+                
+                %calculate the total slack
+                master_schedule.Edges.TS=master_schedule.Edges.LS-master_schedule.Edges.ES;
                 
             end
             
