@@ -4,13 +4,23 @@ classdef Supervisor < handle
     %   Order
     
     properties
-       start_next %start_next is read by the machine_center, it is determined by current job_status and availability of next_job
-       job_done %job_done is determined by the status of the current job in the machine center
+       job_queue %structure that contains operations specific to the functional group supervised
        functional_group %this is the letter of the group of machine functions that the supervisor oversees, it also corresponds to the Routing/operation an individual machine performs
     end
     
     methods
-        function obj = Supervisor %Creates supervisor object
+        function obj = Supervisor(functional_group) %Creates supervisor object
+            obj.functional_group=functional_group;
+            obj.job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
+        end
+        
+        function obj=getWork(obj,ms_e_table)
+            %clear out the job_queue object - concerned that a short table
+            %will "corrupt data"
+            obj.job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
+            for i=1:length(obj)
+                obj(i).job_queue=l_fun_getWork(ms_e_table,obj(i).functional_group,obj(i).job_queue);
+            end
         end
         
         function s = ReleaseWork(obj,job_status,next_job)
@@ -29,4 +39,17 @@ classdef Supervisor < handle
             s = obj.start_next;
         end
     end
+end
+
+function job_queue=l_fun_getWork(ms_e_table,fun_grp,job_queue)
+    %search for row indicies from master schedule Edge table that
+    %correspond to the supervisor's functional group
+    row_index=find(strcmp(ms_e_table.OperationWO,fun_grp));
+    %('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[])
+    job_queue.wo_id=ms_e_table.EdgeWO(row_index); %work order id
+    job_queue.es=ms_e_table.ES(row_index); %early start
+    job_queue.ls=ms_e_table.LS(row_index); %late start
+    job_queue.ef=ms_e_table.EF(row_index); %early finish
+    job_queue.lf=ms_e_table.LF(row_index); %late finish
+    job_queue.duration=ms_e_table.Weight(row_index); %duration
 end
