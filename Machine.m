@@ -9,6 +9,12 @@ classdef Machine < handle
         max_machine_hours %maximum hours alowed by the supervisor
         waiting_on_part %waiting for part from vendor
         op_status %lets the supervisor know the mode of the operation: 'set-up', 'run', ['complete.wo_id']     
+        
+        %these are properties from the WO that the machine is currently working on
+        wo_id
+        op_plan_duration %duration from the routing within the WO object
+        vendor_part %flag to determine if a vendor part is required
+        
     end
     
     methods
