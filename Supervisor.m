@@ -28,51 +28,67 @@ classdef Supervisor < handle
             end
         end
         
-        function f_grp_machines=assignWork(obj,f_grp_machines,js_wos,i)
-            %check the number of idle machines
-            n_idle_machines=sum(strcmp({f_grp_machines.status},'idle'));
-            %determine the number of available wo operations to be worked
-            n_open_ops=0;
-            for j=1:length(js_wos)
-                %find the jth WO that contains the ith supervisor functional group
-                [temp index]=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
-                %sum the number of planned operations
-                n_open_ops=sum(strcmp(js_wos(j).routing.Edges.Status(index),'planned')+n_open_ops);
-            end
-            
-            %assign work to the machines limited by either the # of machines or open operations
-            for k=1:min([n_idle_machines, n_open_ops])
-                %set the machine status to running
-                f_grp_machines(k).status='running';
-                %populate the machines properties
-                %wo id - assigned off supervisor.job_queue but must be checked to see if it is not already being worked
-                ct=0;
-                while ct<=1  %counter inequality is set to 1 b/c only a single operation will be allocated
-                %duration
-                %vendor part required
-                
-                
-            end
-            
-        end
+%         function [f_grp_idle_machines obj]=assignWork(obj,f_grp_idle_machines,js_wos,i)
+%             %check the number of idle machines
+%             n_idle_machines=length(f_grp_idle_machines);
+%             %determine the number of available wo operations to be worked
+%             n_open_ops=0;
+%             for j=1:length(js_wos)
+%                 %find the jth WO that contains the ith supervisor functional group
+%                 [temp index]=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
+%                 %sum the number of planned operations
+%                 n_open_ops=sum(strcmp(js_wos(j).routing.Edges.Status(index),'planned'))+n_open_ops;
+%             end
+%             
+%             %assign work to the machines limited by either the # of machines or open operations
+%             for k=1:min([n_idle_machines, n_open_ops])
+%                 
+%                 ct=0; %assigned WO counter
+%                 ct2=1; %job_queue counter
+%                 while ct<=1 || ct2<=length(obj(i).job_queue.wo_id)  %counter inequality set to 1 b/c only a single operation will be allocated, the "k" loop is sequencing through idle machines - the while loop attempts to match an idle machine to a WO operation to be matched
+%                     if strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).status,'planned') && obj(i).job_queue.ES(ct2)<=current_time=<obj(i).job_queue.LS(ct2)
+%                         %set the machine status to running
+%                         f_grp_idle_machines(k).status='running';
+%                         %populate machine with WO information require to perform job
+%                         f_grp_idle_machine(k).wo_id=obj(i).job_queue.wo_id(ct2);
+%                         f_grp_idle_machine(k).op_plan_duration=obj(i).job_queue.duration(ct2);
+%                         %determine the row that the WO operation lives in the WO routing table
+%                         [temp row_index]=find(strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation,obj(i).functional_group));
+%                         f_grp_idle_machine(k).vendor_part=js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.VendorPart;
+%                          
+%                         ct=ct+1;
+%                     end
+%                     ct2=ct2+1;
+%                     
+%                     %this could use some thinking/debuging but a nice to have
+% %                     if ct2==length(obj(i).job_queue.wo_id) && k~=k(end)
+% %                         warning(['Supervisor ',obj.(i).functional_group,' may not have been able to assign work to idle machine ',num2str(f_grp_idle_machines(k).machine_number)]);
+% %                     end
+%                         
+%                 end
+%                 
+%                 
+%             end
+%             
+%         end
         
-        function s = ReleaseWork(obj,job_status,next_job)
-            
-            if job_status == true && next_job == true %if both job_status and next_job are true, Machine shop can start another job and the current job is marked as complete in the WO
-               obj.start_next = true;
-               disp("Start next job")
-               obj.job_done = true;
-               disp("The current job has been completed")
-            else
-               obj.start_next = false;
-               disp("Current job incomplete, cannot start next job")
-               obj.job_done = false;
-               disp("The current job is still in work")
-            end
-            s = obj.start_next;
-        end
-    end
-end
+%         function s = ReleaseWork(obj,job_status,next_job)
+%             
+%             if job_status == true && next_job == true %if both job_status and next_job are true, Machine shop can start another job and the current job is marked as complete in the WO
+%                obj.start_next = true;
+%                disp("Start next job")
+%                obj.job_done = true;
+%                disp("The current job has been completed")
+%             else
+%                obj.start_next = false;
+%                disp("Current job incomplete, cannot start next job")
+%                obj.job_done = false;
+%                disp("The current job is still in work")
+%             end
+%             s = obj.start_next;
+%         end
+%     end
+    end  
 
 function job_queue=l_fun_getWork(ms_e_table,fun_grp,job_queue)
     %search for row indicies from master schedule Edge table that
