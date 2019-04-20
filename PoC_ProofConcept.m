@@ -79,7 +79,23 @@ js_wos=updateDates(js_wos,revised_wo_dates);
 sup=Supervisor.empty;
 
 %add a supervisor object to the array - A
-sup=[sup; Supervisor('A')];
+sup=[sup; Supervisor('A',{sup.functional_group})];
 
 %have the supervisors get the job queues from the master schedule
 sup=getWork(sup,js_sch.master_schedule.Edges);
+
+%instantiate an empty object array for machines
+m_arr=Machine.empty;
+
+%add a machine object A.1 to the machine array
+m_arr=[m_arr; Machine('A',{sup.functional_group},1,[m_arr.full_name],8)];
+
+%supervisor to assign work to a machine
+for i=1:length(sup)
+    m_arr(1).status
+    f_grp_machines=findobj(m_arr,'functional_group',sup(i).functional_group);
+    %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
+    f_grp_machines=assignWork(sup,f_grp_machines,js_wos,i);
+    %clear f_grp_machines
+    m_arr(1).status
+end
