@@ -93,9 +93,10 @@ m_arr=[m_arr; Machine('A',{sup.functional_group},1,[m_arr.full_name],8)];
 %supervisor to assign work to a machine
 for i=1:length(sup)
     m_arr(1).status
-    f_grp_machines=findobj(m_arr,'functional_group',sup(i).functional_group);
+    %find all machines in a particular functional group that are idle
+    %f_grp_idle_machines=findobj(m_arr,'functional_group',sup(i).functional_group,'-and','status','idle');
     %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
-    f_grp_machines=assignWork(sup,f_grp_machines,js_wos,i);
+    %f_grp_idle_machines=assignWork(sup,f_grp_idle_machines,js_wos,i);
     %clear f_grp_machines
     m_arr(1).status
 end
