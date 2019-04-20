@@ -9,8 +9,13 @@ classdef Supervisor < handle
     end
     
     methods
-        function obj = Supervisor(functional_group) %Creates supervisor object
-            obj.functional_group=functional_group;
+        function obj = Supervisor(functional_group,fun_grp_vec) %Creates supervisor object
+            %check to make sure that a supervisor is not already assigned to the functional group
+            if ~any(strcmp(fun_grp_vec,functional_group))
+                obj.functional_group=functional_group;
+            else
+                error(['A supervisor is already assigned to group ',functional_group,'.']);
+            end
             obj.job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
         end
         
@@ -21,6 +26,34 @@ classdef Supervisor < handle
             for i=1:length(obj)
                 obj(i).job_queue=l_fun_getWork(ms_e_table,obj(i).functional_group,obj(i).job_queue);
             end
+        end
+        
+        function f_grp_machines=assignWork(obj,f_grp_machines,js_wos,i)
+            %check the number of idle machines
+            n_idle_machines=sum(strcmp({f_grp_machines.status},'idle'));
+            %determine the number of available wo operations to be worked
+            n_open_ops=0;
+            for j=1:length(js_wos)
+                %find the jth WO that contains the ith supervisor functional group
+                [temp index]=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
+                %sum the number of planned operations
+                n_open_ops=sum(strcmp(js_wos(j).routing.Edges.Status(index),'planned')+n_open_ops);
+            end
+            
+            %assign work to the machines limited by either the # of machines or open operations
+            for k=1:min([n_idle_machines, n_open_ops])
+                %set the machine status to running
+                f_grp_machines(k).status='running';
+                %populate the machines properties
+                %wo id - assigned off supervisor.job_queue but must be checked to see if it is not already being worked
+                ct=0;
+                while ct<=1  %counter inequality is set to 1 b/c only a single operation will be allocated
+                %duration
+                %vendor part required
+                
+                
+            end
+            
         end
         
         function s = ReleaseWork(obj,job_status,next_job)
@@ -45,11 +78,14 @@ function job_queue=l_fun_getWork(ms_e_table,fun_grp,job_queue)
     %search for row indicies from master schedule Edge table that
     %correspond to the supervisor's functional group
     row_index=find(strcmp(ms_e_table.OperationWO,fun_grp));
-    %('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[])
-    job_queue.wo_id=ms_e_table.EdgeWO(row_index); %work order id
-    job_queue.es=ms_e_table.ES(row_index); %early start
-    job_queue.ls=ms_e_table.LS(row_index); %late start
-    job_queue.ef=ms_e_table.EF(row_index); %early finish
-    job_queue.lf=ms_e_table.LF(row_index); %late finish
-    job_queue.duration=ms_e_table.Weight(row_index); %duration
+    
+    %sort early start, save indicies to ensure operations are ordered correctly
+    [temp s_index]=sort(ms_e_table.ES(row_index));
+    
+    job_queue.wo_id=ms_e_table.EdgeWO(row_index(s_index)); %work order id
+    job_queue.es=ms_e_table.ES(row_index(s_index)); %early start
+    job_queue.ls=ms_e_table.LS(row_index(s_index)); %late start
+    job_queue.ef=ms_e_table.EF(row_index(s_index)); %early finish
+    job_queue.lf=ms_e_table.LF(row_index(s_index)); %late finish
+    job_queue.duration=ms_e_table.Weight(row_index(s_index)); %duration
 end
