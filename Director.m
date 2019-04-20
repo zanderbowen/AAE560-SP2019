@@ -58,6 +58,9 @@ classdef Director < handle
             %initializing schedule variance of the WO operations
             G.Edges.SV=zeros(length(weight),1);
             
+            %initializing the status of each operation
+            G.Edges.Status(linspace(1,length(weight),length(weight)),1)={char('planned')};
+            
             %set WO status to planned
             status='planned';
             
