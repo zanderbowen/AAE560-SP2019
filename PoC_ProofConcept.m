@@ -70,11 +70,11 @@ end
 js_wos=updateDates(js_wos,revised_wo_dates);
 
 %plotting the graph of the network schedule
-% figure;
-% h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-% %try to layout the graph a little more like a Gantt Chart
-% layout(h,'layered','Direction','right','Sources',1);
-% %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+figure;
+h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+%try to layout the graph a little more like a Gantt Chart
+layout(h,'layered','Direction','right','Sources',1);
+%layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
 % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
 %needs some work... labelnode(h,unique([source target]),HideNodeNames);
 
@@ -109,7 +109,7 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 %update work order
 
 %testing out assignWork supervisor method
-% js_wos(1).routing.Edges.VendorPart(1)=1;
+js_wos(1).routing.Edges.VendorPart(1)=1;
 
 %supervisor to assign work to a machine and update WOs to released
 for i=1:length(sup)
@@ -120,9 +120,18 @@ for i=1:length(sup)
     clear f_grp_machines
 end
 
+%create an empty object array of Class Vendor
+ven=Vendor.empty;
+
+%instantiate vendor - #1
+ven=[ven; Vendor(1,[ven.unique_id],2)];
+
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
 for i=1:max(js_sch.master_schedule.Edges.LF)
     [run_machines js_wos]=performWork(findobj(m_arr,'status','running'),js_wos);
 end
 clear run_machines
+
+%testing the Vendor Class processPO method
+ven=processPO(ven,js_wos,js_sch);
