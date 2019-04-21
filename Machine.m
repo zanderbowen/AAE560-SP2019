@@ -14,7 +14,7 @@ classdef Machine < handle
        
     end
     
-    method
+    methods
     
       function doWork
          
@@ -24,7 +24,7 @@ classdef Machine < handle
                      %%% Supervisor(functional_class) is how I'm naming the supervisor that it is listening too for the moment
           if(work_needed > 0 && Supervisor(functional_class).start_next == true) 
                 if(waiting_on_part == false)
-                     machine_idle = false:
+                     machine_idle = false;
                      machine_running = true;
                      machine_hours = machine_hours + 1;
                      %%subtract 1 hour worked from the work needed on the project
