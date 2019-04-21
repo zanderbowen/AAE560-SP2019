@@ -2,6 +2,9 @@ clear;
 clc;
 close all;
 
+%add a variable to simulate the timer
+current_time=0;
+
 %instantiate customer object
 cust=Customer(0,0);
 
@@ -81,6 +84,9 @@ sup=Supervisor.empty;
 %add a supervisor object to the array - A
 sup=[sup; Supervisor('A',{sup.functional_group})];
 
+%add a supervisor object to the array - B
+sup=[sup; Supervisor('B',{sup.functional_group})];
+
 %have the supervisors get the job queues from the master schedule
 sup=getWork(sup,js_sch.master_schedule.Edges);
 
@@ -90,13 +96,25 @@ m_arr=Machine.empty;
 %add a machine object A.1 to the machine array
 m_arr=[m_arr; Machine('A',{sup.functional_group},1,[m_arr.full_name],8)];
 
-%supervisor to assign work to a machine
+%add a machine object B.1 to the machine array
+m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
+
+%testing out assignWork supervisor method
+js_wos(1).routing.Edges.VendorPart(1)=1;
+
+%supervisor to assign work to a machine and update WOs to released
 for i=1:length(sup)
-    m_arr(1).status
     %find all machines in a particular functional group that are idle
-    %f_grp_idle_machines=findobj(m_arr,'functional_group',sup(i).functional_group,'-and','status','idle');
+    f_grp_idle_machines=findobj(m_arr,'functional_group',sup(i).functional_group,'-and','status','idle');
     %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
-    %f_grp_idle_machines=assignWork(sup,f_grp_idle_machines,js_wos,i);
-    %clear f_grp_machines
-    m_arr(1).status
+    [f_grp_idle_machines sup]=assignWork(sup,f_grp_idle_machines,js_wos,i,current_time);
+    clear f_grp_machines
+    
+    %update WOs with which operations have been released
+    for k=1:length(sup(i).job_queue.wo_id)
+        if strcmp(sup(i).job_queue.status(k),'released')
+            row_index=find(strcmp(js_wos(sup(i).job_queue.wo_id(k)).routing.Edges.Operation,sup(i).functional_group));
+            js_wos(sup(i).job_queue.wo_id(k)).routing.Edges.Status{row_index}='released';
+        end
+    end
 end
