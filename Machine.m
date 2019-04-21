@@ -36,7 +36,7 @@ classdef Machine < handle
             obj.full_name={char([functional_group,'.',num2str(machine_number)])};
         end
         
-        function obj=performWork(obj,js_wos)
+        function [obj js_wos]=performWork(obj,js_wos)
                 for i=1:length(obj)
                 %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
                 obj(i).op_actual_duration=obj(i).op_plan_duration;
@@ -51,12 +51,24 @@ classdef Machine < handle
                     obj(i).op_status='set-up';
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
                     obj(i).machine_hours=obj(i).machine_hours+1;
+                    
+                    %update work order information
+                    js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='set-up';
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
                 elseif obj(i).machine_hours<obj(i).op_actual_duration
                     obj(i).op_status='run';
                     obj(i).machine_hours=obj(i).machine_hours+1;
+                    
+                    %update work order information
+                    js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='run';
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
                 else
                     obj(i).op_status='complete';
                     obj(i).status='idle';
+                    
+                    %update work order information
+                    js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
                 end
             end
         end

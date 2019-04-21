@@ -27,7 +27,7 @@ classdef Supervisor < handle
             end
         end
         
-        function [f_grp_idle_machines obj]=assignWork(obj,f_grp_idle_machines,js_wos,i,current_time)
+        function [f_grp_idle_machines obj js_wos]=assignWork(obj,f_grp_idle_machines,js_wos,i,current_time)
             %check to see if an idle machine just completed work - gather info
             
             %check the number of idle machines
@@ -36,7 +36,7 @@ classdef Supervisor < handle
             n_open_ops=0;
             for j=1:length(js_wos)
                 %find the jth WO that contains the ith supervisor functional group
-                [temp index]=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
+                index=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
                 %sum the number of planned operations
                 n_open_ops=sum(strcmp(js_wos(j).routing.Edges.Status(index),'planned'))+n_open_ops;
             end
@@ -61,6 +61,9 @@ classdef Supervisor < handle
                         
                         %initialize hours worked to zero in the machine when a new operations is assigned to it
                         f_grp_idle_machines(k).machine_hours=0;
+                        
+                        %update WO operation status to show 'released'
+                        js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Status{row_index}='released';
                         
                         %update job queue to show which WO opertions have been released to machines
                         obj(i).job_queue.status{ct2}='released';

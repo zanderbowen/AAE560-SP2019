@@ -116,21 +116,13 @@ for i=1:length(sup)
     %find all machines in a particular functional group that are idle
     f_grp_idle_machines=findobj(m_arr,'functional_group',sup(i).functional_group,'-and','status','idle');
     %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
-    [f_grp_idle_machines sup]=assignWork(sup,f_grp_idle_machines,js_wos,i,current_time);
+    [f_grp_idle_machines sup js_wos]=assignWork(sup,f_grp_idle_machines,js_wos,i,current_time);
     clear f_grp_machines
-    
-    %update WOs with which operations have been released
-    for k=1:length(sup(i).job_queue.wo_id)
-        if strcmp(sup(i).job_queue.status(k),'released')
-            row_index=find(strcmp(js_wos(sup(i).job_queue.wo_id(k)).routing.Edges.Operation,sup(i).functional_group));
-            js_wos(sup(i).job_queue.wo_id(k)).routing.Edges.Status{row_index}='released';
-        end
-    end
 end
 
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
 for i=1:max(js_sch.master_schedule.Edges.LF)
-    run_machines=performWork(findobj(m_arr,'status','running'),js_wos);
+    [run_machines js_wos]=performWork(findobj(m_arr,'status','running'),js_wos);
 end
 clear run_machines
