@@ -99,8 +99,17 @@ m_arr=[m_arr; Machine('A',{sup.functional_group},1,[m_arr.full_name],8)];
 %add a machine object B.1 to the machine array
 m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 
+%!!! supervisor should check for completed work before assigning new work !!!
+%??? need to think about order of operations for functions that run inside
+%of the wrapper ???
+
+%??? hoping findoj updates machines accordingly ???
+%run_machines=performWork(findobj(m_arr,'status','running'),js_wos);
+
+%update work order
+
 %testing out assignWork supervisor method
-js_wos(1).routing.Edges.VendorPart(1)=1;
+% js_wos(1).routing.Edges.VendorPart(1)=1;
 
 %supervisor to assign work to a machine and update WOs to released
 for i=1:length(sup)
@@ -118,3 +127,10 @@ for i=1:length(sup)
         end
     end
 end
+
+%for testing purposes after a supervisor has assigned work since I don't
+%have the timer wrapper right now
+for i=1:max(js_sch.master_schedule.Edges.LF)
+    run_machines=performWork(findobj(m_arr,'status','running'),js_wos);
+end
+clear run_machines
