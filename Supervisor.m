@@ -28,6 +28,8 @@ classdef Supervisor < handle
         end
         
         function [f_grp_idle_machines obj]=assignWork(obj,f_grp_idle_machines,js_wos,i,current_time)
+            %check to see if an idle machine just completed work - gather info
+            
             %check the number of idle machines
             n_idle_machines=length(f_grp_idle_machines);
             %determine the number of available wo operations to be worked
@@ -56,6 +58,9 @@ classdef Supervisor < handle
                         %determine the row that the WO operation lives in the WO routing table
                         row_index=find(strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation,obj(i).functional_group));
                         f_grp_idle_machines(k).vendor_part=js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.VendorPart(row_index);
+                        
+                        %initialize hours worked to zero in the machine when a new operations is assigned to it
+                        f_grp_idle_machines(k).machine_hours=0;
                         
                         %update job queue to show which WO opertions have been released to machines
                         obj(i).job_queue.status{ct2}='released';
