@@ -120,6 +120,12 @@ for i=1:length(sup)
     clear f_grp_machines
 end
 
+%create an empty object array of Class Vendor
+ven=Vendor.empty;
+
+%instantiate vendor - #1
+ven=[ven; Vendor(1,[ven.unique_id])];
+
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
 for i=1:max(js_sch.master_schedule.Edges.LF)
