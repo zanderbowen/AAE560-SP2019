@@ -70,13 +70,13 @@ end
 js_wos=updateDates(js_wos,revised_wo_dates);
 
 %plotting the graph of the network schedule
-figure;
-h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-%try to layout the graph a little more like a Gantt Chart
-layout(h,'layered','Direction','right','Sources',1);
-%layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-% [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
-%needs some work... labelnode(h,unique([source target]),HideNodeNames);
+% figure;
+% h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+% %try to layout the graph a little more like a Gantt Chart
+% layout(h,'layered','Direction','right','Sources',1);
+% %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+% % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+% %needs some work... labelnode(h,unique([source target]),HideNodeNames);
 
 %instantiate a an empty object array of class Supervisor
 sup=Supervisor.empty;
@@ -108,8 +108,10 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 
 %update work order
 
-%testing out assignWork supervisor method
+%testing out assignWork and processPO supervisor and vendor methods
 js_wos(1).routing.Edges.VendorPart(1)=1;
+js_wos(1).routing.Edges.VendorPart(2)=1;
+js_wos(2).routing.Edges.VendorPart(1)=1;
 
 %supervisor to assign work to a machine and update WOs to released
 for i=1:length(sup)
@@ -134,4 +136,9 @@ end
 clear run_machines
 
 %testing the Vendor Class processPO method
-ven=processPO(ven,js_wos,js_sch);
+ven=processPO(ven,js_wos,js_sch); 
+
+%testing the Vendor Class deliverPart method
+for i=1:max(js_sch.master_schedule.Edges.LF)+1
+    [ven js_wos]=deliverPart(ven,js_wos,i-1);
+end
