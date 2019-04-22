@@ -29,6 +29,6 @@ ven=Vendor.empty;
 %instantiate vendor - #1
 ven=[ven; Vendor(1,[ven.unique_id],2)];
 
-CommunicationNetwork(Director,Customer,Supervisor,Machine,Receiving,Vendor)
+CommunicationNetwork('Director','Customer','Supervisor','Machine','Receiving','Vendor')
 
 plot(comm_net)
