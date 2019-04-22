@@ -259,6 +259,8 @@ function master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,mast
     master_schedule.Edges.EdgeWO(edge_index)=u_id;
     master_schedule.Edges.OperationWO{edge_index}=['StartLead'];
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN tempG.Edges.EndNodes(j,1)];
+    %add BufferTracking column set to NaN to the master schedule Edges
+    master_schedule.Edges.BufTrack(edge_index)=NaN;
 end
 
 function master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule)
@@ -274,6 +276,8 @@ function master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule)
     master_schedule.Edges.EdgeWO(edge_index)=u_id;
     master_schedule.Edges.OperationWO{edge_index}=char(tempG.Edges.Operation(j));
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
+    %add BufferTracking column set to NaN to the master schedule Edges
+    master_schedule.Edges.BufTrack(edge_index)=NaN;
 end
 
 function master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule)
@@ -289,6 +293,8 @@ function master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.EdgeWO(edge_index)=u_id;
     master_schedule.Edges.OperationWO{edge_index}='Buffer';
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
+    %add BufferTracking column set to NaN to the master schedule Edges
+    master_schedule.Edges.BufTrack(edge_index)=obj.wo_buffer;
 end
 
 function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
@@ -304,4 +310,6 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.EdgeWO(edge_index)=u_id;
     master_schedule.Edges.OperationWO{edge_index}='EndLag';
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN NaN];
+    %add BufferTracking column set to NaN to the master schedule Edges
+    master_schedule.Edges.BufTrack(edge_index)=NaN;
 end
