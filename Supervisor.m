@@ -9,47 +9,94 @@ classdef Supervisor < handle
     end
     
     methods
-        function obj = Supervisor(functional_group) %Creates supervisor object
-            obj.functional_group=functional_group;
+        function obj = Supervisor(functional_group,fun_grp_vec) %Creates supervisor object
+            %check to make sure that a supervisor is not already assigned to the functional group
+            if ~any(strcmp(fun_grp_vec,functional_group))
+                obj.functional_group=functional_group;
+            else
+                error(['A supervisor is already assigned to group ',functional_group,'.']);
+            end
             obj.job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
         end
         
         function obj=getWork(obj,ms_e_table)
-            %clear out the job_queue object - concerned that a short table
-            %will "corrupt data"
-            obj.job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
             for i=1:length(obj)
+                %clear out the job_queue object - concerned that a short table will "corrupt data"
+                obj(i).job_queue=struct('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[]);
                 obj(i).job_queue=l_fun_getWork(ms_e_table,obj(i).functional_group,obj(i).job_queue);
             end
         end
         
-        function s = ReleaseWork(obj,job_status,next_job)
+        function [f_grp_idle_machines obj js_wos]=assignWork(obj,f_grp_idle_machines,js_wos,i,current_time)
+            %check to see if an idle machine just completed work - gather info
             
-            if job_status == true && next_job == true %if both job_status and next_job are true, Machine shop can start another job and the current job is marked as complete in the WO
-               obj.start_next = true;
-               disp("Start next job")
-               obj.job_done = true;
-               disp("The current job has been completed")
-            else
-               obj.start_next = false;
-               disp("Current job incomplete, cannot start next job")
-               obj.job_done = false;
-               disp("The current job is still in work")
+            %check the number of idle machines
+            n_idle_machines=length(f_grp_idle_machines);
+            %determine the number of available wo operations to be worked
+            n_open_ops=0;
+            for j=1:length(js_wos)
+                %find the jth WO that contains the ith supervisor functional group
+                index=find(strcmp(js_wos(j).routing.Edges.Operation,obj(i).functional_group));
+                %sum the number of planned operations
+                n_open_ops=sum(strcmp(js_wos(j).routing.Edges.Status(index),'planned'))+n_open_ops;
             end
-            s = obj.start_next;
+            
+            %assign work to the machines limited by either the # of machines or open operations
+            for k=1:min([n_idle_machines, n_open_ops])
+                
+                ct=1; %assigned WO counter
+                ct2=1; %job_queue counter
+                while ct<=1 && ct2<=length(obj(i).job_queue.wo_id)  %counter inequality set to 1 b/c only a single operation will be allocated, the "k" loop is sequencing through idle machines - the while loop attempts to match an idle machine to a WO operation to be matched
+                    %first condition is that WO status is planned
+                    %second condition is that the current time falls between the operation's early start and late start times determined by the master schedule
+                    if strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).status,'planned') && all([obj(i).job_queue.es(ct2)<=current_time, current_time<=obj(i).job_queue.ls(ct2)])
+                        %set the machine status to running
+                        f_grp_idle_machines(k).status='running';
+                        %populate machine with WO information require to perform job
+                        f_grp_idle_machines(k).wo_id=obj(i).job_queue.wo_id(ct2);
+                        f_grp_idle_machines(k).op_plan_duration=obj(i).job_queue.duration(ct2);
+                        %determine the row that the WO operation lives in the WO routing table
+                        row_index=find(strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation,obj(i).functional_group));
+                        f_grp_idle_machines(k).vendor_part=js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.VendorPart(row_index);
+                        
+                        %initialize hours worked to zero in the machine when a new operations is assigned to it
+                        f_grp_idle_machines(k).machine_hours=0;
+                        
+                        %update WO operation status to show 'released'
+                        js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Status{row_index}='released';
+                        
+                        %update job queue to show which WO opertions have been released to machines
+                        obj(i).job_queue.status{ct2}='released';
+                         
+                        ct=ct+1;
+                    end
+                    ct2=ct2+1;
+                    
+                    %this could use some thinking/debuging but a nice to have
+%                     if ct2==length(obj(i).job_queue.wo_id) && k~=k(end)
+%                         warning(['Supervisor ',obj.(i).functional_group,' may not have been able to assign work to idle machine ',num2str(f_grp_idle_machines(k).machine_number)]);
+%                     end     
+                end 
+            end 
         end
-    end
+    end  
 end
-
 function job_queue=l_fun_getWork(ms_e_table,fun_grp,job_queue)
     %search for row indicies from master schedule Edge table that
     %correspond to the supervisor's functional group
     row_index=find(strcmp(ms_e_table.OperationWO,fun_grp));
-    %('wo_id',[],'es',[],'ls',[],'ef',[],'lf',[],'duration',[])
-    job_queue.wo_id=ms_e_table.EdgeWO(row_index); %work order id
-    job_queue.es=ms_e_table.ES(row_index); %early start
-    job_queue.ls=ms_e_table.LS(row_index); %late start
-    job_queue.ef=ms_e_table.EF(row_index); %early finish
-    job_queue.lf=ms_e_table.LF(row_index); %late finish
-    job_queue.duration=ms_e_table.Weight(row_index); %duration
+    
+    %sort early start, save indicies to ensure operations are ordered correctly
+    [temp s_index]=sort(ms_e_table.ES(row_index));
+    
+    job_queue.wo_id=ms_e_table.EdgeWO(row_index(s_index)); %work order id
+    job_queue.es=ms_e_table.ES(row_index(s_index)); %early start
+    job_queue.ls=ms_e_table.LS(row_index(s_index)); %late start
+    job_queue.ef=ms_e_table.EF(row_index(s_index)); %early finish
+    job_queue.lf=ms_e_table.LF(row_index(s_index)); %late finish
+    job_queue.duration=ms_e_table.Weight(row_index(s_index)); %duration
+    %add a blank status into the job_queue
+    for i=1:length(job_queue.wo_id)
+        job_queue.status{i}='';
+    end
 end
