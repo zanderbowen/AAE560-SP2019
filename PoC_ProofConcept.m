@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-plot_master=1;
+plot_master=0;
 
 %add a variable to simulate the timer
 current_time=0;
@@ -113,7 +113,7 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 %update work order
 
 %testing out assignWork and processPO supervisor and vendor methods
-js_wos(1).routing.Edges.VendorPart(1)=1;
+%js_wos(1).routing.Edges.VendorPart(1)=1;
 js_wos(1).routing.Edges.VendorPart(2)=1;
 js_wos(2).routing.Edges.VendorPart(1)=1;
 
