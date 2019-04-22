@@ -3,7 +3,7 @@
 cust=Customer.empty;
 
 %add a customer to the object array - A
-cust = [cust; Customer(1,[cust.unique_id],2)];
+cust = [cust; Customer(0,0,1)];
 
 %instantiate director object
 dir=Director();
@@ -32,6 +32,6 @@ ven=Vendor.empty;
 %instantiate vendor - #1
 ven=[ven; Vendor(1,[ven.unique_id],2)];
 
-CommunicationNetwork(dir,cust,sup,m_arr,rec,ven)
+comm_net=CommunicationNetwork(dir,cust,sup,m_arr,rec,ven);
 
-plot(CommunicationNetwork)
+plot(comm_net)
