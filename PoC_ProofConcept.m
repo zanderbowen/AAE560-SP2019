@@ -146,3 +146,8 @@ ven=processPO(ven,js_wos,js_sch);
 for i=1:max(js_sch.master_schedule.Edges.LF)+1
     [ven js_wos]=deliverPart(ven,js_wos,i-1);
 end
+
+%search for open work order (i.e. not closed or cancelled)
+open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
+%call closeWO method to check to see if the WO status should be set to closed
+open_wos=closeWO(open_wos);
