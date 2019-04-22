@@ -6,16 +6,16 @@ classdef JobShopSchedule < handle
         master_schedule %directed graph that contains the master schedule
         start_node %the starting node number
         end_node %the ending node number
-        sch_res %a buffer between work orders to provide ability to deliver on time
+        wo_buffer %a buffer between work orders to provide ability to deliver on time
     end
     
     methods
-        function obj = JobShopSchedule(sch_res) %Job Shop Schedule constructor method
+        function obj = JobShopSchedule(wo_buffer) %Job Shop Schedule constructor method
             %create an empty directed graph
             obj.master_schedule=digraph([],[]);
             obj.start_node={'Start'};
             obj.end_node={'End'};
-            obj.sch_res=sch_res;
+            obj.wo_buffer=wo_buffer;
         end
         
         %add WOs to Job Shop master schedule
@@ -42,7 +42,7 @@ classdef JobShopSchedule < handle
                     temp_cp.Edges.Weight=-temp_cp.Edges.Weight;
                     [cp_nodes t_start cp_edge_indicies]=shortestpath(temp_cp,obj.start_node,obj.end_node);
                     %output from shortest path is a negative duration
-                    t_start=abs(t_start)+obj.sch_res;
+                    t_start=abs(t_start);
                 end
                 
                 %*** Serialize Work Orders *** applies FIFO scheduling based on due date
@@ -55,11 +55,11 @@ classdef JobShopSchedule < handle
                         %populate a structure with revised information
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=t_start;
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
                     else
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=revised_wo_dates.end_date(i-1);
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
                     end
                 end
                 %*** End Work Order Serialization***
@@ -95,6 +95,9 @@ classdef JobShopSchedule < handle
                         elseif rout_source~=1 && rout_target==2 %edge is the last routing operation
                             %add the last operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+                            %add the buffer edge to the schedule
+                            %!!! caution: this only works for operations in serial process !!!
+                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule);
 
@@ -103,6 +106,9 @@ classdef JobShopSchedule < handle
                             master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule);
                             %add the only operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+                            %add the buffer edge to the schedule
+                            %!!! caution: this only works for operations in serial process !!!
+                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                             
@@ -184,7 +190,7 @@ classdef JobShopSchedule < handle
                             if master_schedule.Edges.EF(j)==0
                                 master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
                             else
-                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j)+obj.sch_res;
+                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
                             end
                             master_schedule.Edges.LS(j)=master_schedule.Edges.LF(j)-master_schedule.Edges.Weight(j);
                         end
@@ -270,8 +276,23 @@ function master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule)
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,1) tempG.Edges.EndNodes(j,2)];
 end
 
-function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
+function master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule)
     source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
+    target={['Buffer.',num2str(u_id)]};
+    weight=obj.wo_buffer;
+    master_schedule=addedge(master_schedule,source,target,weight);
+    %find new edge index
+    edge_index=findedge(master_schedule,source,target);
+    %adding edge labels to the master schedule Edges table
+    master_schedule.Edges.EdgeLabel{edge_index}=['Buffer.',num2str(u_id),'=',num2str(weight)];
+    %adding additional routing information to the Edges table
+    master_schedule.Edges.EdgeWO(edge_index)=u_id;
+    master_schedule.Edges.OperationWO{edge_index}='Buffer';
+    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
+end
+
+function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
+    source={['Buffer.',num2str(u_id)]};
     target=obj.end_node;
     weight=0;
     master_schedule=addedge(master_schedule,source,target,weight);
@@ -282,5 +303,5 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     %adding additional routing information to the Edges table
     master_schedule.Edges.EdgeWO(edge_index)=u_id;
     master_schedule.Edges.OperationWO{edge_index}='EndLag';
-    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[tempG.Edges.EndNodes(j,2) NaN];
+    master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN NaN];
 end
