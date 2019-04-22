@@ -8,7 +8,7 @@ classdef Receiving < handle
    
                 
   properties
-    (GetAccess = 'public', SetAccess ='public');
+    %(GetAccess = 'public', SetAccess ='public');
  
     vendor_part_received %Receiving status based on vendor reported delivery status
  
@@ -51,7 +51,8 @@ methods  %Note: can call method by either obj.methodName(arg) OR methodName(obj,
       end
    
 end 
-   
+
+end
 %Making assumption that work order compares vendor part received time vs. scheduled due date (aka, receiving doesn't report that)
 
 
