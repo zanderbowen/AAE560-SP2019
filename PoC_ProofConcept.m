@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-plot_master=0;
+plot_master=1;
 
 %add a variable to simulate the timer
 current_time=0;
@@ -146,6 +146,14 @@ ven=processPO(ven,js_wos,js_sch);
 for i=1:max(js_sch.master_schedule.Edges.LF)+1
     [ven js_wos]=deliverPart(ven,js_wos,i-1);
 end
+
+%search for work orders with status in-work
+wos_in_work=findobj(js_wos,'status','in-work');
+%search for work orders with status planned
+wos_planned=findobj(js_wos,'status','planned');
+%update the master schedule before closing WOs to limit looping thru closed ones
+%update master schedule
+js_sch.master_schedule=updateMasterSchedule(js_sch,wos_in_work,wos_planned);
 
 %search for open work order (i.e. not closed or cancelled)
 open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
