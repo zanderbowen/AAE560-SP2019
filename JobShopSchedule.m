@@ -296,8 +296,7 @@ classdef JobShopSchedule < handle
             
             %calculate critical pathe for only the updated master schedule
             %extract subgraph
-            %find nodes based on ms_index !!! need to add in lead, buffer,
-            %and lag edges !!!
+            %find nodes based on ms_index
             sub_s=[master_schedule.Edges.EndNodes(ms_index,1);master_schedule.Edges.EndNodes(ms_index_start,1);...
                 master_schedule.Edges.EndNodes(ms_index_buffer,1);master_schedule.Edges.EndNodes(ms_index_end,1)];
             sub_t=[master_schedule.Edges.EndNodes(ms_index,2);master_schedule.Edges.EndNodes(ms_index_start,2);...
@@ -305,20 +304,22 @@ classdef JobShopSchedule < handle
             sub_nodes=unique([sub_s;sub_t]);
             %extract the sub-graph of updated schedule
             subG=subgraph(master_schedule,sub_nodes);
-            ms_cp_updated=l_critcalPath(subG,cp_source,cp_target)
+            ms_cp_updated=l_critcalPath(subG,cp_source,cp_target);
             %*** End Update In-Work ***
             
             %*** Update Planned ***
             %loop thru wos_planned and store early starts and corresponding
             %master schedule row indicies
-            for i=1:length(wos_in_work)
-                wo_id=wos_in_work(i).unique_id; %WO unique ID
-                wo_r_table=wos_in_work(i).routing.Edges; %WO routing table
-                wo_cp=wos_in_work(i).cp_duration; %WO planned critical path duration
-                ms_row_index(i)=findedge(master_schedule)
-                wo_es= %WO early start in master schedule
+            for i=1:length(wos_planned)
+                wo_id=wos_planned(i).unique_id; %WO unique ID
+                wo_r_table=wos_planned(i).routing.Edges; %WO routing table
+                wo_cp=wos_planned(i).cp_duration; %WO planned critical path duration
+                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Start.Lead.',num2str(wo_id)}));
+                wo_es(i)=master_schedule.Edges.ES(ms_row_index(i)); %WO early start in master schedule
             end
             
+            %sort the early start vector to find the next work order to occur
+            [temp sort_index]=sort(wo_es);
             
             
             %adjust buffer (cp_wo - sum[op_work]) - buffer cannot go below zero
