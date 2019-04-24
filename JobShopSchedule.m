@@ -304,22 +304,62 @@ classdef JobShopSchedule < handle
             sub_nodes=unique([sub_s;sub_t]);
             %extract the sub-graph of updated schedule
             subG=subgraph(master_schedule,sub_nodes);
+            %calculate the critical path of the sub-graph
             ms_cp_updated=l_critcalPath(subG,cp_source,cp_target);
             %*** End Update In-Work ***
             
             %*** Update Planned ***
-            %loop thru wos_planned and store early starts and corresponding
+            %loop thru wos_planned and store early finishes and corresponding
             %master schedule row indicies
             for i=1:length(wos_planned)
                 wo_id=wos_planned(i).unique_id; %WO unique ID
                 wo_r_table=wos_planned(i).routing.Edges; %WO routing table
                 wo_cp=wos_planned(i).cp_duration; %WO planned critical path duration
-                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Start.Lead.',num2str(wo_id)}));
-                wo_es(i)=master_schedule.Edges.ES(ms_row_index(i)); %WO early start in master schedule
+                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Start.Lead.',num2str(wo_id)})); %master schedule row index of the Start.Lead.WO graph edge
+                ms_buf_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Buffer.',num2str(wo_id)})); %master schedule row index of the Start.Lead.WO graph edge
+                wo_ef(i)=master_schedule.Edges.EF(ms_row_index(i)); %WO early finish in master schedule
             end
             
-            %sort the early start vector to find the next work order to occur
-            [temp sort_index]=sort(wo_es);
+            %sort the early finish vector to find the next planned work order to occur
+            [temp sort_index]=sort(wo_ef);
+            
+            %critical path comes from sub-graph of updated portion of the Master Schedule
+            %the weight of the Edge with the smallest earliest finish start
+            %value is replaced with the critical path of the updated
+            %portion of the master schedule.
+            master_schedule.Edges.Weight(ms_row_index(sort_index(1)))=ms_cp_updated;
+            
+            %adjust the buffer in the WO according to the difference in
+            %early finish and sub-graph critical path
+            %negative number means total buffers of all in-work/completed
+            %have overrun their total allotment - the planned work order
+            %buffers need to be adjusted accordingly
+            total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
+            
+            %adjust the buffer on the earliest early finish planned WO
+            if total_buffer_consumed<0
+                %determine the amount to reduce the buffer of the current
+                %WO
+                if abs(total_buffer_consumed)>=obj.wo_buffer
+                %!!! this adjusts the weight of the buffer edge of interest !!! -> master_schedule.Edges.Weight(ms_buf_row_index(sort_index(1)))
+                %reduce the total buffer consumed by the amount deducted
+                %from the WO being re-scheduled
+                total_buffer_consumed=total_buffer_consumed+obj.wo_buffer;
+                elseif abs(total_buffer_consumed<obj.wo_buffer
+                    %adjust the wo buffer accordingly
+                    
+                    %adjust the total buffer consumed
+                    total_buffer_consumed=0;
+                end
+                
+            end
+            
+            %loop through the remainder of the planned work orders
+            for i=2:length(ms_row_index)
+                %adjust weight of Start Lead Edges - sub-graph critical
+                %path plus the early finish of the WO in question
+                master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wo_ef(sort_index(1))+ms_cp_updated;
+            end
             
             
             %adjust buffer (cp_wo - sum[op_work]) - buffer cannot go below zero
