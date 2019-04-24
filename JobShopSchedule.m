@@ -341,16 +341,16 @@ classdef JobShopSchedule < handle
                     %update the buffer of the WO
                     if total_buffer_consumed>0
                         %determine the amount to reduce the buffer of the current WO
-                        if total_buffer_consumed>=obj.wo_buffer
+                        if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
                             master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
                             %reduce the total buffer consumed by the amount deducted
                             %from the WO being re-scheduled
-                            total_buffer_consumed=total_buffer_consumed-obj.wo_buffer;
+                            total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
                             %adjust the buffer label
                             master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={'Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)};
                             
-                        elseif total_buffer_consumed<obj.wo_buffer
-                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=obj.wo_buffer-total_buffer_consumed;
+                        else
+                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
                             %reduce the total buffer consumed by the amount deducted
                             %from the WO being re-scheduled
                             total_buffer_consumed=0;
