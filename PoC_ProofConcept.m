@@ -147,6 +147,7 @@ for i=1:max(js_sch.master_schedule.Edges.LF)+1
     [ven js_wos]=deliverPart(ven,js_wos,i-1);
 end
 
+% **** stuff in work right now ***
 %search for work orders with status in-work
 wos_in_work=findobj(js_wos,'status','in-work');
 %search for work orders with status planned
