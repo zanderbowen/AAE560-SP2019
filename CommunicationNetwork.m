@@ -23,14 +23,16 @@ comm_net=addnode(comm_net,source);
 %build the director-customer links
 for i=1:length(cust_vec)
     target={['Customer.',num2str(cust_vec(i).unique_id)]};
-    comm_net=addedge(comm_net,source,target);
+    weight= 3;
+    comm_net=addedge(comm_net,source,target,weight);
 end
 
 %build the director-supervisor links
 %assume there is only one supervisor per machine group
 for i=1:length(sup_vec)
     target={['Supervisor.',sup_vec(i).functional_group]};
-    comm_net=addedge(comm_net,source,target);
+    weight = 1;
+    comm_net=addedge(comm_net,source,target,weight);
 end
 
 %build the supervisor-machine links
@@ -38,7 +40,8 @@ end
 for i=1:length(mach_vec)
     source={['Supervisor.',mach_vec(i).functional_group]};
     target={['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)]};
-    comm_net=addedge(comm_net,source,target);
+    weight = 1;
+    comm_net=addedge(comm_net,source,target,weight);
 end
 
 %build the supervisor-receiving links
@@ -46,7 +49,8 @@ end
 target={'Receiving'};
 for i=1:length(sup_vec)
     source={['Supervisor.',sup_vec(i).functional_group]};
-    comm_net=addedge(comm_net,source,target);
+    weight = 2;
+    comm_net=addedge(comm_net,source,target,weight);
 end
 
 %build the receiving-vendor links
@@ -54,5 +58,6 @@ end
 target={'Receiving'};
 for i=1:length(ven_vec)
     source={['Vendor.',num2str(ven_vec(i).unique_id)]};
-    comm_net=addedge(comm_net,source,target);
+    weight = 2;
+    comm_net=addedge(comm_net,source,target,weight);
 end
