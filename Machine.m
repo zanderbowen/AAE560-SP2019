@@ -52,6 +52,8 @@ classdef Machine < handle
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
                     obj(i).machine_hours=obj(i).machine_hours+1;
                     
+                    %!!! add a property to capture set-up time !!!
+                    
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='set-up';
                     js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
