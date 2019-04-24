@@ -294,7 +294,7 @@ classdef JobShopSchedule < handle
                 master_schedule(ms_buffer_index).BufTrack=buff_con_t;
             end
             
-            %calculate critical pathe for only the updated master schedule
+            %calculate critical path for only the updated master schedule
             %extract subgraph
             %find nodes based on ms_index
             sub_s=[master_schedule.Edges.EndNodes(ms_index,1);master_schedule.Edges.EndNodes(ms_index_start,1);...
@@ -323,63 +323,43 @@ classdef JobShopSchedule < handle
             %sort the early finish vector to find the next planned work order to occur
             [temp sort_index]=sort(wo_ef);
             
-            for i=1:length(wo_ef)
-                if i==1
-                    lead_edge_weight=
-                else
-                    lead_edge_weight=
-                end
-                    %critical path comes from sub-graph of updated portion of the Master Schedule
-                    %the weight of the Edge with the smallest earliest finish start
-                    %value is replaced with the critical path of the updated
-                    %portion of the master schedule.
-                    master_schedule.Edges.Weight(ms_row_index(sort_index(1)))=ms_cp_updated;
-                    %adjust the Edge Labels accordingly
-                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(1)))={'Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(1)))),'=',num2str(ms_cp_updated)};
-
-                    %adjust the buffer in the WO according to the difference in
-                    %early finish and sub-graph critical path
-                    %negative number means total buffers of all in-work/completed
-                    %have overrun their total allotment - the planned work order
-                    %buffers need to be adjusted accordingly
-                    total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
-
-                    %adjust the buffer on the earliest early finish planned WO
-                    if total_buffer_consumed<0
-                        %determine the amount to reduce the buffer of the current
-                        %WO
-                        if abs(total_buffer_consumed)>=obj.wo_buffer
-                        %!!! this adjusts the weight of the buffer edge of interest !!! -> master_schedule.Edges.Weight(ms_buf_row_index(sort_index(1)))
-                        %reduce the total buffer consumed by the amount deducted
-                        %from the WO being re-scheduled
-                        total_buffer_consumed=total_buffer_consumed+obj.wo_buffer;
-                        elseif abs(total_buffer_consumed<obj.wo_buffer
-                            %adjust the wo buffer accordingly
-
-                            %update the EdgeLabel
-                            %adjust the total buffer consumed
-                            total_buffer_consumed=0;
-                        end
-
-                    end
-
-                    %loop through the remainder of the planned work orders
-                    for i=2:length(ms_row_index)
-                        %adjust weight of Start Lead Edges - sub-graph critical
-                        %path plus the early finish of the WO in question
-                        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wo_ef(sort_index(1))+ms_cp_updated;
-                    end
+            %calculate the difference between critical path of the updated
+            %portion of the master schedule and the earliest latest finish
+            %this is the offset required to apply the Start Lead for the
+            %planned WOs as well as the amount of buffer consumed by the
+            %complete/in-work WOs
+            lead_delta=ms_cp_updated-wo_ef(sort_index(1));
+            total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
+            
+            if lead_delta>0
+                for i=1:length(sort_index)
+                    %update the weight of the start lead edge
+                    master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta;
+                    %update the EdgeLabel
+                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={'Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)};
                     
+                    %update the buffer of the WO
+                    if total_buffer_consumed>0
+                        %determine the amount to reduce the buffer of the current WO
+                        if total_buffer_consumed>=obj.wo_buffer
+                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
+                            %reduce the total buffer consumed by the amount deducted
+                            %from the WO being re-scheduled
+                            total_buffer_consumed=total_buffer_consumed-obj.wo_buffer;
+                            %adjust the buffer label
+                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={'Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)};
+                            
+                        elseif total_buffer_consumed<obj.wo_buffer
+                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=obj.wo_buffer-total_buffer_consumed;
+                            %reduce the total buffer consumed by the amount deducted
+                            %from the WO being re-scheduled
+                            total_buffer_consumed=0;
+                            %adjust the buffer label
+                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={'Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)};
+                        end
+                    end
+                end
             end
-            
-            
-            %adjust buffer (cp_wo - sum[op_work]) - buffer cannot go below zero
-            %buffer sum (this can go negative) used to adjust planned buffers
-            %update planned start leads cycle through based on early start
-            %if the WO is in-work, then schedule lead is already passed
-            %maybe just look at differnce between master schedule critical path and early start (just add this difference to the start lead) 
-            %previous WOs can consume planned WOs buffer if buffer sum <0
-            %previous WO completes early, adds to buffer
             %*** End Update Planned ***
             
             %!!! perform master schedule forward and backward passes !!!
