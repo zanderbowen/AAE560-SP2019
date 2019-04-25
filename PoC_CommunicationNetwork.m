@@ -6,7 +6,7 @@ cust=Customer.empty;
 
 %add a customer to the object array - A
 
-cust = [cust; Customer()];
+cust = [cust; Customer(1,0)];
 cust.unique_id = 1;
 
 %instantiate director object
