@@ -1,3 +1,4 @@
+close all;
 clear all;
 clc;
 %delete(findall(0));
@@ -51,10 +52,11 @@ clc;
 %-------------------------------------------------------------------------%
 
 %   Map the network via the CommunicationNetwork function:
-comm_net = CommunicationNetwork(dir, cust, sup, mach, rec, ven);
+comm_net = CommunicationNetwork3(dir, cust, sup, mach, rec, ven);
 
 %   Plot the network:
-plot(comm_net)
+%plot(comm_net)
+NetworkMeasures(comm_net)
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,8 +77,8 @@ plot(comm_net)
 js_wos=WorkOrder.empty;
 
 %Now populate work order with desired number and due dates
-[ js_wos, cust ] = createWO(5, 10, cust, js_wos);
-[ js_wos, cust ] = createWO(5, 20, cust, js_wos);
+[ js_wos, cust ] = createWO(1, 10, cust, js_wos);
+%[ js_wos, cust ] = createWO(5, 20, cust, js_wos);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
