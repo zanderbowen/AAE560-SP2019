@@ -17,6 +17,10 @@ sup=Supervisor.empty;
 
 %add a supervisor object to the array - A
 sup=[sup; Supervisor('A',{sup.functional_group})];
+%add a supervisor object to the array - B
+sup=[sup; Supervisor('B',{sup.functional_group})];
+%add a supervisor object to the array - C
+sup=[sup; Supervisor('C',{sup.functional_group})];
 
 %instantiate an empty object array for machines
 m_arr=Machine.empty;
