@@ -1,5 +1,6 @@
 clear all;
 clc;
+%delete(findall(0));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %-------------------------------------------------------------------------%
@@ -29,7 +30,7 @@ clc;
 %-------------------------------------------------------------------------%
 
 %   Create Job Shop (Director(s), Supervisor(s), Machine(s), & Receiving):
-[dir, sup, mach, rec] = createJobShop(1,2,4,1);
+[dir, sup, mach, rec] = createJobShop(1,3,3,1);
 %   In this case, a Job Shop was created with 1 Director, 2 Supervisors, 4
 %   Machines, and 1 Receiving focal.
 
@@ -74,8 +75,8 @@ plot(comm_net)
 js_wos=WorkOrder.empty;
 
 %Now populate work order with desired number and due dates
-[ js_wos, cust ] = createWO(1, 10, cust, js_wos);
-[ js_wos, cust ] = createWO(1, 20, cust, js_wos);
+[ js_wos, cust ] = createWO(5, 10, cust, js_wos);
+[ js_wos, cust ] = createWO(5, 20, cust, js_wos);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,15 +103,6 @@ js_sch=JobShopSchedule(0);
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
-%add a job shop work order to the array - #3
-[ js_wos, cust ] = createWO(1, 20, cust, js_wos);
-[js_wos] = routing( js_wos, dir );
-
-%add new WO to master schedule
-[js_sch.master_schedule, revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
-%update start and end dates and master_schedule flag
-js_wos=updateDates(js_wos,revised_wo_dates);
-
 %plotting the graph of the network schedule
 figure;
 h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
@@ -121,40 +113,31 @@ layout(h,'layered','Direction','right','Sources',1);
 %needs some work... labelnode(h,unique([source target]),HideNodeNames);
 
 %-------------------------------------------------------------------------%
-%   3.B Route through Vendor                                              %
+%   3.B Route Vendor and Job Shop                                         %
 %-------------------------------------------------------------------------%
 
-%Vendor Class processPO method
-ven=processPO(ven,js_wos,js_sch); 
+for i=1:length(js_wos)
+    hours = 0;
+    max_hours = 40;
+    
+  
+    while hours < max_hours
+        if sum(strcmp(js_wos(i).routing.Edges.Status,'complete')) < ...
+                length(js_wos(i).routing.Edges.Operation)
+            
+                for j = 1:length(js_wos(i).routing.Edges.Operation)
+                        js_wos(i).routing.Edges.VendorPart(j) = 1;
+                end
+                    
+                [ t, ven, js_wos, js_sch, sup, mach ] = ...
+                    routeWOs(js_wos, js_sch, ven, sup, mach, hours);
+                start(t);
+                hours = hours +1;
 
-%Vendor Class deliverPart method
-for i=1:max(js_sch.master_schedule.Edges.LF)+1
-    [ven, js_wos]=deliverPart(ven,js_wos,i-1);
+        else
+            hours = max_hours;
+        end
+
+    end
 end
 
-%-------------------------------------------------------------------------%
-%   3.C Route through Supervisors & Machines                              %
-%-------------------------------------------------------------------------%
-
-%have the supervisors get the job queues from the master schedule
-sup=getWork(sup,js_sch.master_schedule.Edges);
-
-%!!! supervisor should check for completed work before assigning new work !!!
-%??? need to think about order of operations for functions that run inside
-%of the wrapper ???
-
-%??? hoping findoj updates machines accordingly ???
-run_machines=performWork(findobj(mach,'status','running'),js_wos);
-
-%update work order
-
-current_time = 3;
-%supervisor to assign work to a machine and update WOs to released
-for i=1:length(sup)
-    %find all machines in a particular functional group that are idle
-    f_grp_idle_machines=findobj(mach,'functional_group',sup(i).functional_group,'-and','status','idle');
-    %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
-    [f_grp_idle_machines, sup, js_wos]=assignWork(sup,f_grp_idle_machines,js_wos,i,current_time);
-    clear f_grp_machines
-end
-clear i
