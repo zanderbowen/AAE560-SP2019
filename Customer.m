@@ -3,12 +3,15 @@ classdef Customer < handle
     %   Detailed explanation goes here
     
     properties
+
         new_wo
         new_wo_due_date
+
         unique_id
     end
     
     methods
+
         function obj = Customer(unique_id,id_vec)
             %check to make sure that a supervisor is not already assigned to the functional group
             if isempty(find(id_vec==unique_id))

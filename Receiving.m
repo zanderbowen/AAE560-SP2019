@@ -7,7 +7,9 @@ classdef Receiving < handle
    
                 
   properties
+
 %     (GetAccess = 'public', SetAccess ='public');
+
  
     vendor_part_received %Receiving status based on vendor reported delivery status
  

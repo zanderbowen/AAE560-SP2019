@@ -1,6 +1,8 @@
 function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
 
-%*** Abstracted Status Quo Network of a Typical Job Shop ***
+%*** Enterprise Resource Planning as Central Node of Information ***
+% Maintain the typical hub and spoke network as well (hub and spoke for
+% problem resolution)
 
 %Input director, supervisor, machine, vendor, customer, and receiving
 %object vectors/arrays. Generate the network topology used to communicate within
@@ -23,6 +25,11 @@ comm_net=graph({},{});
 source={'Director'};
 comm_net=addnode(comm_net,source);
 
+%connect the director to the ERP
+target={'ERP'};
+weight=1;
+comm_net=addedge(comm_net,source,target,weight);
+
 %build the director-customer links
 for i=1:length(cust_vec)
     target={['Customer.',num2str(cust_vec(i).unique_id)]};
@@ -38,6 +45,15 @@ for i=1:length(sup_vec)
     comm_net=addedge(comm_net,source,target,weight);
 end
 
+%connect the supervisor to the ERP
+source={'ERP'};
+for i=1:length(sup_vec)
+    target={['Supervisor.',sup_vec(i).functional_group]};
+    weight = 1;
+    comm_net=addedge(comm_net,source,target,weight);
+end
+
+
 %build the supervisor-machine links
 %assume there is only one supervisor per machine group
 for i=1:length(mach_vec)
@@ -47,6 +63,15 @@ for i=1:length(mach_vec)
     comm_net=addedge(comm_net,source,target,weight);
 end
 
+%build the machine-ERP connection
+source={'ERP'};
+for i=1:length(mach_vec)
+    target={['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)]};
+    weight = 1;
+    comm_net=addedge(comm_net,source,target,weight);
+end
+
+
 %build the supervisor-receiving links
 %assume there is only a single receiving node
 target={'Receiving'};
@@ -55,6 +80,11 @@ for i=1:length(sup_vec)
     weight = 2;
     comm_net=addedge(comm_net,source,target,weight);
 end
+
+%connect receiving to the ERP
+source={'ERP'};
+weight=1;
+comm_net=addedge(comm_net,source,target,weight);
 
 %build the receiving-vendor links
 %assume there is only a single receiving node
