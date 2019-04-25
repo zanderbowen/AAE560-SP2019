@@ -6,8 +6,7 @@ cust=Customer.empty;
 
 %add a customer to the object array - A
 
-cust = [cust; Customer()];
-cust.unique_id = 1;
+cust=[cust; Customer(1,0)];
 
 %instantiate director object
 dir=Director();
@@ -27,6 +26,10 @@ m_arr=Machine.empty;
 
 %add a machine object A.1 to the machine array
 m_arr=[m_arr; Machine('A',{sup.functional_group},1,[m_arr.full_name],8)];
+%add a machine object B.1 to the machine array
+m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
+%add a machine object C.1 to the machine array
+m_arr=[m_arr; Machine('C',{sup.functional_group},1,[m_arr.full_name],8)];
 
 % %create an empty object array of Class Receiving
 rec=Receiving.empty;
