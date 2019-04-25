@@ -1,4 +1,7 @@
 function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
+
+%*** Abstracted Status Quo Network of a Typical Job Shop ***
+
 %Input director, supervisor, machine, vendor, customer, and receiving
 %object vectors/arrays. Generate the network topology used to communicate within
 %the JS SoS.
