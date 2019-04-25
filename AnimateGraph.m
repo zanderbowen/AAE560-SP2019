@@ -6,9 +6,9 @@ close all;
 
 filename='C:\Users\david\Documents\network.gif';
 
-fh=figure;
+fh=figure('units','normalized','outerposition',[0 0 1 1]);
 
-h=plot(G);
+h=plot(G,'LineWidth',3,'MarkerSize',10,'NodeFontSize',16);
 cust_index=find(contains(G.Nodes.Name,'Customer'));
 ven_index=find(contains(G.Nodes.Name,'Vendor'));
 
@@ -16,7 +16,7 @@ mach_index=find(contains(G.Nodes.Name,'Machine'));
 ERP_index=find(contains(G.Nodes.Name,'ERP'));
 
 source_indicies=[cust_index,ven_index];
-sink_indicies=[mach_index,ERP_index];
+sink_indicies=[mach_index;ERP_index];
 
 layout(h,'layered','Direction','down','Sources',G.Nodes.Name(source_indicies),'Sinks',G.Nodes.Name(sink_indicies));
 

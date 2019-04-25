@@ -33,7 +33,7 @@ comm_net=addedge(comm_net,source,target,weight);
 %build the director-customer links
 for i=1:length(cust_vec)
     target={['Customer.',num2str(cust_vec(i).unique_id)]};
-    weight= 3;
+    weight= 1;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -77,7 +77,7 @@ end
 target={'Receiving'};
 for i=1:length(sup_vec)
     source={['Supervisor.',sup_vec(i).functional_group]};
-    weight = 2;
+    weight = 1;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -91,6 +91,6 @@ comm_net=addedge(comm_net,source,target,weight);
 target={'Receiving'};
 for i=1:length(ven_vec)
     source={['Vendor.',num2str(ven_vec(i).unique_id)]};
-    weight = 2;
+    weight = 1;
     comm_net=addedge(comm_net,source,target,weight);
 end
