@@ -6,6 +6,7 @@ function node_table = ClusteringCoefficient(G)
 nnodes=numnodes(G);
 
 %pull out the adjacency matrix
+A=full(adjacency(G));
 
 %calculate number of triangles
 triangles=diag(A^3)./2;
