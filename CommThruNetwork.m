@@ -4,7 +4,6 @@ function time_penalty = CommThruNetwork(comm_net)
 
 %Status Quo Network - Deterministic Communication
 
-
 comm_seq={...
     'Director','Supervisor.A';...
     'Supervisor.A','Machine.A1';...
@@ -25,7 +24,11 @@ comm_seq={...
     'Machine.C1','Supervisor.C';...
     'Supervisor.C','Director';...
     };
-    
+   
+comm_penalty=0;
+for i=1:length(comm_seq)
+    comm_penalty=shortestpath(comm_net,comm_seq)+comm_penalty;
+end
     
 end
 
