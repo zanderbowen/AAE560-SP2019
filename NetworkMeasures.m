@@ -35,7 +35,7 @@ G.Nodes.BCentrality=B;
 node_table=G.Nodes;
 
 %plot the network topology
-h=plot(G);
+h=plot(G,'LineWidth',3,'MarkerSize',10,'NodeFontSize',16);
 
 %find all the customers
 cust_index=find(contains(G.Nodes.Name,'Customer'));
