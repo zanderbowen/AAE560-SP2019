@@ -45,7 +45,11 @@ mach_index=find(contains(G.Nodes.Name,'Machine'));
 ERP_index=find(contains(G.Nodes.Name,'ERP'));
 
 source_indicies=[cust_index,ven_index];
-sink_indicies=[mach_index,ERP_index];
+if ~isempty(ERP_index)
+sink_indicies=[mach_index;ERP_index];
+else
+    sink_indicies=mach_index;
+end
 
 %layout(h,'force3','WeightEffect','direct');
 %layout(h,'layered','AssignLayers','alap');
