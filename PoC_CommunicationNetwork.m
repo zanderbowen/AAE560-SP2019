@@ -47,4 +47,4 @@ ven=[ven; Vendor(1,[ven.unique_id],2)];
 %comm_net=CommunicationNetwork2(dir,cust,sup,m_arr,rec,ven);
 comm_net=CommunicationNetwork3(dir,cust,sup,m_arr,rec,ven);
 
-plot(comm_net,'EdgeLabel',comm_net.Edges.Weight)
+%plot(comm_net,'EdgeLabel',comm_net.Edges.Weight)
