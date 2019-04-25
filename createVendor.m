@@ -1,4 +1,4 @@
-function [ ven ] = createVendor( no_ven )
+function [ ven ] = createVendor( no_ven, early_delivery )
 %
 %--------------------------------------------------------------------------
 %CREATEVENDOR  Function that insantiates all the objects of a vendor base
@@ -8,7 +8,8 @@ function [ ven ] = createVendor( no_ven )
 %   the corresponding object arrays.  
 %
 %   Inputs:
-%   no_ven      Number of Vendors
+%   no_ven          Number of Vendors
+%   early_delivery  Time Units that Job Shop Desires an Early Delivery
 %--------------------------------------------------------------------------
 
     %------------------------------------------
@@ -16,9 +17,10 @@ function [ ven ] = createVendor( no_ven )
     %------------------------------------------
     
     %Vendor Object(s):
-    for i = 1:no_ven
-        ven(i)=Vendor();
-    end
+    if no_ven > 0
+        ven=Vendor.empty;
+        for i = 1:no_ven
+            ven = [ven; Vendor(i,[ven.unique_id],early_delivery)];
+        end
 
 end
-

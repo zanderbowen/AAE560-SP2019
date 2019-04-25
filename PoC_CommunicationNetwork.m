@@ -1,9 +1,13 @@
+clear all
+
 
 %instantiate customer object
 cust=Customer.empty;
 
 %add a customer to the object array - A
-cust = [cust; Customer(0,0,1)];
+
+cust = [cust; Customer()];
+cust.unique_id = 1;
 
 %instantiate director object
 dir=Director();
