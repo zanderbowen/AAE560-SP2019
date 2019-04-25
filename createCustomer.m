@@ -17,9 +17,11 @@ function [ cust ] = createCustomer( no_cust )
     %------------------------------------------
     
     %Customer Object(s):
-    for i = 1:no_cust
-        cust(i)=Customer(0,0);
+    if no_cust > 0
+        cust = Customer.empty;
+        for i = 1:no_cust
+            cust = [cust; Customer(i,[cust.unique_id])];
+        end
     end
 
 end
-
