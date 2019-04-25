@@ -64,3 +64,4 @@ for i=1:length(ven_vec)
     weight = 2;
     comm_net=addedge(comm_net,source,target,weight);
 end
+
