@@ -34,5 +34,17 @@ G.Nodes.BCentrality=B;
 
 node_table=G.Nodes;
 
-end
+%plot the network topology
+h=plot(G);
 
+%find all the customers
+cust_index=find(contains(G.Nodes.Name,'Customer'))
+
+%source_index=[];
+%sink_index=[];
+
+%layout(h,'force3','WeightEffect','direct');
+%layout(h,'layered','AssignLayers','alap');
+layout(h,'layered','Direction','down','Sources',{'Customer.1','Vendor.1'},'Sinks',{'Machine.A1','ERP'});
+
+end
