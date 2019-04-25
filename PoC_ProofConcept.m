@@ -6,7 +6,7 @@ close all;
 current_time=0;
 
 %instantiate customer object
-cust=Customer(0,0);
+cust=Customer_OLD();
 
 %instantiate director object
 dir=Director();
