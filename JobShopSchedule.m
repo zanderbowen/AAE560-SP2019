@@ -334,7 +334,7 @@ end
 
 
 function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
-    source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
+    source={['Buffer.',num2str(u_id)]};
     target=obj.end_node;
     weight=0;
     master_schedule=addedge(master_schedule,source,target,weight);
