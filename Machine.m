@@ -52,13 +52,9 @@ classdef Machine < handle
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
                     obj(i).machine_hours=obj(i).machine_hours+1;
                     
-                    %!!! add a property to capture set-up time !!!
-                    
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='set-up';
                     js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
-                    js_wos(obj(i).wo_id).status='in-work';
-                
                 elseif obj(i).machine_hours<obj(i).op_actual_duration
                     obj(i).op_status='run';
                     obj(i).machine_hours=obj(i).machine_hours+1;
@@ -66,8 +62,6 @@ classdef Machine < handle
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='run';
                     js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
-                    js_wos(obj(i).wo_id).status='in-work';
-                
                 else
                     obj(i).op_status='complete';
                     obj(i).status='idle';
@@ -75,7 +69,6 @@ classdef Machine < handle
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
                     js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
-                    js_wos(obj(i).wo_id).status='in-work';
                 end
             end
         end
