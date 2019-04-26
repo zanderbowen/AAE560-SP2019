@@ -153,7 +153,7 @@ classdef JobShopSchedule < handle
                 %buffer consumed tracker
                 buff_con_t=0;
                 %loop through each operation in the WO
-                for j=1:length(wo_r_table.Weights)
+                for j=1:length(wo_r_table.Weight)
                     op_name=wo_r_table.Operation(j);
                     op_status=wo_r_table.Status(j);
                     op_s_node=wo_r_table.EndNodes(j,1);
@@ -165,12 +165,12 @@ classdef JobShopSchedule < handle
                     ms_index(j)=findedge(master_schedule,ms_s_node,ms_t_node);
                     %used for extracting a sub-graph to get critical path
                     %to update Lead starts later
-                    ms_index_start(j)=findedge(master_schedule,obj.start_node,{num2str(wo_id),'.1'});
-                    ms_index_buffer(j)=findedge(master_schedule,{num2str(wo_id),'.2'},{'Buffer.',num2str(wo_id)});
-                    ms_index_end(j)=findedge(master_schedule,{'Buffer.',num2str(wo_id)},obj.end_node);
+                    ms_index_start(j)=findedge(master_schedule,obj.start_node,{[num2str(wo_id),'.1']});
+                    ms_index_buffer(j)=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
+                    ms_index_end(j)=findedge(master_schedule,{['Buffer.',num2str(wo_id)]},obj.end_node);
                     
                     %updating the total consumed buffer
-                    buff_con_t=(op_planned_duration-op_hours_worked)+buff_cond_t;
+                    buff_con_t=(op_planned_duration-op_hours_worked)+buff_con_t;
                     
                     %an operation in work with hours exceeding the plan will be written to master schedule
                     %OR completed operations actual hours will be written to the master schedule
@@ -179,18 +179,18 @@ classdef JobShopSchedule < handle
                         master_schedule.Edges.Weight(ms_index(j))=op_hours_worked;
                     end
                 end
-                ms_buffer_index=findedge(master_schedule,{num2str(wo_id),'.2'},{'Buffer.',num2str(wo_id)});
+                ms_buffer_index=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
                 
                 %adjusting the WO buffer and tracking the total consumed
-                act_wo_cp=l_critcalPath(master_schedule,obj.start_node,{num2str(wo_id),'.2'});
+                act_wo_cp=l_critcalPath(master_schedule,obj.start_node,{[num2str(wo_id),'.2']});
                 if (wo_cp-act_wo_cp)<0
                     master_schedule.Edges.Weight(ms_buffer_index)=0;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={'Buffer.',num2str(wo_id),'=0'};
+                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
                 else
                     master_schedule.Edges.Weight(ms_buffer_index)=wo_cp-act_wo_cp;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={'Buffer.',num2str(wo_id),'=',num2str(wo_cp-act_wo_cp)};
+                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(wo_cp-act_wo_cp)]};
                 end
-                master_schedule(ms_buffer_index).BufTrack=buff_con_t;
+                master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
             end
             
             %calculate critical path for only the updated master schedule
@@ -204,7 +204,7 @@ classdef JobShopSchedule < handle
             %extract the sub-graph of updated schedule
             subG=subgraph(master_schedule,sub_nodes);
             %calculate the critical path of the sub-graph
-            ms_cp_updated=l_critcalPath(subG,cp_source,cp_target);
+            ms_cp_updated=l_critcalPath(subG,obj.start_node,obj.end_node);
             %*** End Update In-Work ***
             
             %*** Update Planned ***
@@ -214,8 +214,8 @@ classdef JobShopSchedule < handle
                 wo_id=wos_planned(i).unique_id; %WO unique ID
                 wo_r_table=wos_planned(i).routing.Edges; %WO routing table
                 wo_cp=wos_planned(i).cp_duration; %WO planned critical path duration
-                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Start.Lead.',num2str(wo_id)})); %master schedule row index of the Start.Lead.WO graph edge
-                ms_buf_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{'Buffer.',num2str(wo_id)})); %master schedule row index of the Start.Lead.WO graph edge
+                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Start.Lead.',num2str(wo_id)]})); %master schedule row index of the Start.Lead.WO graph edge
+                ms_buf_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Buffer.',num2str(wo_id)]})); %master schedule row index of the Start.Lead.WO graph edge
                 wo_ef(i)=master_schedule.Edges.EF(ms_row_index(i)); %WO early finish in master schedule
             end
             
@@ -235,7 +235,7 @@ classdef JobShopSchedule < handle
                     %update the weight of the start lead edge
                     master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta;
                     %update the EdgeLabel
-                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={'Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)};
+                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
                     
                     %update the buffer of the WO
                     if total_buffer_consumed>0
@@ -246,7 +246,7 @@ classdef JobShopSchedule < handle
                             %from the WO being re-scheduled
                             total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
                             %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={'Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)};
+                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)]};
                             
                         else
                             master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
@@ -254,7 +254,7 @@ classdef JobShopSchedule < handle
                             %from the WO being re-scheduled
                             total_buffer_consumed=0;
                             %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={'Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)};
+                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)]};
                         end
                     end
                 end
