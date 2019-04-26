@@ -2,6 +2,9 @@ clear;
 clc;
 close all;
 
+%flag to plot the schedule or not
+plot_master=1;
+
 %add a variable to simulate the timer
 current_time=0;
 
@@ -70,13 +73,15 @@ end
 js_wos=updateDates(js_wos,revised_wo_dates);
 
 %plotting the graph of the network schedule
-% figure;
-% h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-% %try to layout the graph a little more like a Gantt Chart
-% layout(h,'layered','Direction','right','Sources',1);
-% %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-% % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
-% %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+    if plot_master==1
+    figure;
+    h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+    %try to layout the graph a little more like a Gantt Chart
+    layout(h,'layered','Direction','right','Sources',1);
+    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+    % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+end
 
 %instantiate a an empty object array of class Supervisor
 sup=Supervisor.empty;
