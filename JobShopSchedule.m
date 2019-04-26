@@ -6,7 +6,7 @@ classdef JobShopSchedule < handle
         master_schedule %directed graph that contains the master schedule
         start_node %the starting node number
         end_node %the ending node number
-        %wo_buffer %a buffer between work orders to provide ability to deliver on time
+        wo_buffer %a buffer between work orders to provide ability to deliver on time
     end
     
     methods
@@ -16,7 +16,7 @@ classdef JobShopSchedule < handle
             obj.master_schedule=digraph([],[]);
             obj.start_node={'Start'};
             obj.end_node={'End'};
-            %obj.wo_buffer=wo_buffer;
+            obj.wo_buffer=wo_buffer;
         end
         
         %add WOs to Job Shop master schedule
