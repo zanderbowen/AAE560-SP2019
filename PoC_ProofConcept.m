@@ -6,7 +6,7 @@ close all;
 current_time=0;
 
 %instantiate customer object
-cust=Customer(0,0);
+cust=Customer(1,0);
 
 %instantiate director object
 dir=Director();
@@ -109,7 +109,7 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 %update work order
 
 %testing out assignWork and processPO supervisor and vendor methods
-js_wos(1).routing.Edges.VendorPart(1)=1;
+%js_wos(1).routing.Edges.VendorPart(1)=1;
 js_wos(1).routing.Edges.VendorPart(2)=1;
 js_wos(2).routing.Edges.VendorPart(1)=1;
 
@@ -142,3 +142,29 @@ ven=processPO(ven,js_wos,js_sch);
 for i=1:max(js_sch.master_schedule.Edges.LF)+1
     [ven js_wos]=deliverPart(ven,js_wos,i-1);
 end
+
+% **** stuff in work right now ***
+%search for work orders with status in-work
+wos_in_work=findobj(js_wos,'status','in-work');
+%search for work orders with status planned
+wos_planned=findobj(js_wos,'status','planned');
+
+%update the master schedule before closing WOs to avoid the code havint to loop thru closed ones
+%update master schedule
+js_sch.master_schedule=updateMasterSchedule(js_sch,wos_in_work,wos_planned);
+
+%plotting the graph of the network schedule - flag to plot is at top of code
+if plot_master==1
+    figure;
+    h1=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+    %try to layout the graph a little more like a Gantt Chart
+    layout(h1,'layered','Direction','right','Sources',1);
+    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+end
+
+%search for open work order (i.e. not closed or cancelled)
+open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
+%call closeWO method to check to see if the WO status should be set to closed
+open_wos=closeWO(open_wos);
