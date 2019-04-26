@@ -152,10 +152,21 @@ end
 wos_in_work=findobj(js_wos,'status','in-work');
 %search for work orders with status planned
 wos_planned=findobj(js_wos,'status','planned');
-%update the master schedule before closing WOs to limit looping thru closed ones
 
+%update the master schedule before closing WOs to avoid the code havint to loop thru closed ones
 %update master schedule
-% !!! js_sch.master_schedule=updateMasterSchedule(js_sch,wos_in_work,wos_planned);
+js_sch.master_schedule=updateMasterSchedule(js_sch,wos_in_work,wos_planned);
+
+%plotting the graph of the network schedule - flag to plot is at top of code
+if plot_master==1
+    figure;
+    h1=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+    %try to layout the graph a little more like a Gantt Chart
+    layout(h1,'layered','Direction','right','Sources',1);
+    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+end
 
 %search for open work order (i.e. not closed or cancelled)
 open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
