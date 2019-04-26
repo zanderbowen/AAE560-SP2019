@@ -6,17 +6,19 @@ classdef JobShopSchedule < handle
         master_schedule %directed graph that contains the master schedule
         start_node %the starting node number
         end_node %the ending node number
-        wo_buffer %a buffer between work orders to provide ability to deliver on time
+        sch_res %a buffer between work orders to provide ability to deliver on time
     end
     
     methods
+
         %Job Shop Schedule constructor method
         function obj = JobShopSchedule(wo_buffer) 
+
             %create an empty directed graph
             obj.master_schedule=digraph([],[]);
             obj.start_node={'Start'};
             obj.end_node={'End'};
-            obj.wo_buffer=wo_buffer;
+            obj.sch_res=sch_res;
         end
         
         %add WOs to Job Shop master schedule
@@ -39,7 +41,9 @@ classdef JobShopSchedule < handle
                 if isempty(obj.master_schedule.Nodes) %start date for first sorted WO is dependent on whether the master schedule is populated or now
                     t_start=0;
                 else %find the critical path through the existing master schedule to determine t_start if the master schedule already has work in it
+
                     t_start=l_critcalPath(master_schedule,obj.start_node,obj.end_node);
+
                 end
                 
                 %*** Serialize Work Orders *** applies FIFO scheduling based on due date
@@ -52,11 +56,11 @@ classdef JobShopSchedule < handle
                         %populate a structure with revised information
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=t_start;
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
                     else
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=revised_wo_dates.end_date(i-1);
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
                     end
                 end
                 %*** End Work Order Serialization***
@@ -92,9 +96,6 @@ classdef JobShopSchedule < handle
                         elseif rout_source~=1 && rout_target==2 %edge is the last routing operation
                             %add the last operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
-                            %add the buffer edge to the schedule
-                            %!!! caution: this only works for operations in serial process !!!
-                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule);
 
@@ -103,9 +104,6 @@ classdef JobShopSchedule < handle
                             master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule);
                             %add the only operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
-                            %add the buffer edge to the schedule
-                            %!!! caution: this only works for operations in serial process !!!
-                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                             
@@ -132,6 +130,7 @@ classdef JobShopSchedule < handle
                 [master_schedule.Edges.ES,master_schedule.Edges.EF]=l_fun_fwdPass(master_schedule,obj);
                 
                 %*** Perform Backward Pass - Calculate Late Start/Finish
+
                 [master_schedule.Edges.LS,master_schedule.Edges.LF]=l_fun_bwdPass(master_schedule,obj);
                 
                 %calculate the total slack
@@ -329,8 +328,9 @@ function master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.BufTrack(edge_index)=obj.wo_buffer;
 end
 
+
 function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
-    source={['Buffer.',num2str(u_id)]};
+    source={[num2str(u_id),'.',num2str(tempG.Edges.EndNodes(j,2))]};
     target=obj.end_node;
     weight=0;
     master_schedule=addedge(master_schedule,source,target,weight);
@@ -452,4 +452,5 @@ function [LS,LF]=l_fun_bwdPass(master_schedule,obj)
     %*** End Backward Pass ***
     LS=master_schedule.Edges.LS;
     LF=master_schedule.Edges.LF;
+
 end
