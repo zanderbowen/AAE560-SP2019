@@ -129,122 +129,21 @@ classdef JobShopSchedule < handle
                 master_schedule.Edges.LF=NaN([length(master_schedule.Edges.Weight) 1]);
                 
                 %*** Perform Forward Pass - Calculate Early Start/Finish
-                s=successors(master_schedule,obj.start_node);
-                for i=1:length(s)
-                    for j=1:length(master_schedule.Edges.Weight)
-                        if strcmp(master_schedule.Edges.EndNodes(j,1),obj.start_node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
-                            master_schedule.Edges.ES(j)=0;
-                            master_schedule.Edges.EF(j)=master_schedule.Edges.Weight(j);
-                        end
-                    end
-                end
-                
-                %brute force loop through remaining edges to calculate ES and EF
-                ct=1;
-                while any(isnan(master_schedule.Edges.ES)) || any(isnan(master_schedule.Edges.EF))
-                    if isnan(master_schedule.Edges.ES(ct)) || isnan(master_schedule.Edges.EF(ct))
-                        %check preceeding edges have EF calculated
-                        node=master_schedule.Edges.EndNodes(ct,1);
-                        p=predecessors(master_schedule,node);
-                        for i=1:length(p)
-                            for j=1:length(master_schedule.Edges.Weight)
-                                if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),node)
-                                    EF(i)=master_schedule.Edges.EF(j);
-                                end
-                            end
-                        end
-
-                        %check to ensure that ES and EF can be calculated then calculate
-                        if ~any(isnan(EF))
-                            master_schedule.Edges.ES(ct)=max(EF);
-                            master_schedule.Edges.EF(ct)=max(EF)+master_schedule.Edges.Weight(ct);
-                        end
-                    end
-
-                    %increment counter or reset counter
-                    if ct>=length(master_schedule.Edges.ES)
-                        ct=1;
-                    else
-                        ct=ct+1;
-                    end
-
-                    %clear EF variable
-                    clear EF;
-                end
-                %*** End Forward Pass ***
+                [master_schedule.Edges.ES,master_schedule.Edges.EF]=l_fun_fwdPass(master_schedule,obj);
                 
                 %*** Perform Backward Pass - Calculate Late Start/Finish
-
-                p=predecessors(master_schedule,obj.end_node);
-                for i=1:length(p)
-                    for j=1:length(master_schedule.Edges.Weight)
-                        if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),obj.end_node)
-                            %typically late finish would be calc as follows
-                            %master_schedule.Edges.LF(j)=max(master_schedule.Edges.EF);
-                            %however all End Lag edges are set to zero
-                            %therefore the EF for the particular edge is used instead of the maximum function
-                            %the if statement ensures that the first task can't start the sch_res late and alread eat up all of the management reserve
-                            if master_schedule.Edges.EF(j)==0
-                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
-                            else
-                                master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
-                            end
-                            master_schedule.Edges.LS(j)=master_schedule.Edges.LF(j)-master_schedule.Edges.Weight(j);
-                        end
-                    end
-                end
-                
-                %brute force loop through remaining edges to calculate LS and LF
-                ct=1;
-                while any(isnan(master_schedule.Edges.LS)) || any(isnan(master_schedule.Edges.LF))
-                    if isnan(master_schedule.Edges.LS(ct)) || isnan(master_schedule.Edges.LF(ct))
-                        %check preceeding edges have EF calculated
-                        node=master_schedule.Edges.EndNodes(ct,2);
-                        s=successors(master_schedule,node);
-                        for i=1:length(s)
-                            for j=1:length(master_schedule.Edges.Weight)
-                                if strcmp(master_schedule.Edges.EndNodes(j,1),node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
-                                    LS(i)=master_schedule.Edges.LS(j);    
-                                end
-                            end
-%                             LS(i)=master_schedule.Edges.LS(find(ismember(G.Edges.EndNodes,[node s(i)],'rows')));
-                        end
-
-                        %check to ensure that ES and EF can be calculated then calculate
-                        if ~any(isnan(LS))
-                            master_schedule.Edges.LF(ct)=min(LS);
-                            master_schedule.Edges.LS(ct)=min(LS)-master_schedule.Edges.Weight(ct);
-                        end
-
-                        %clear LS variable
-                        clear LS;
-                    end
-
-                    %increment counter or reset it
-                    if ct>=length(master_schedule.Edges.ES)
-                        ct=1;
-                    else
-                        ct=ct+1;
-                    end
-                end
-                %*** End Backward Pass ***
+                [master_schedule.Edges.LS,master_schedule.Edges.LF]=l_fun_bwdPass(master_schedule,obj);
                 
                 %calculate the total slack
                 master_schedule.Edges.TS=master_schedule.Edges.LS-master_schedule.Edges.ES;
-                
             end
-            
-
-%                 %perform fwd/bwd schedule passes - calc early/late start/finish
-%                 %pass info to update WO due dates
-%             end
         end
         
         %update master schedule based on work performed
-        function master_schedule=updateMasterSchedule(obj,wos_in_work,wos_planned);
+        function master_schedule=updateMasterSchedule(obj,wos_in_work,wos_planned)
             master_schedule=obj.master_schedule;
             
-            %*** End Update In-Work ***
+            %*** Start Update In-Work ***
             %loop thru wos_in_work and update edge weights
             for i=1:length(wos_in_work)
                 wo_id=wos_in_work(i).unique_id; %WO unique ID
@@ -361,8 +260,13 @@ classdef JobShopSchedule < handle
                 end
             end
             %*** End Update Planned ***
-            
-            %!!! perform master schedule forward and backward passes !!!
+
+            %*** Perform Forward Pass - Calculate Early Start/Finish
+            [master_schedule.Edges.ES,master_schedule.Edges.EF]=l_fun_fwdPass(master_schedule,obj);
+            %*** Perform Backward Pass - Calculate Late Start/Finish
+            [master_schedule.Edges.LS,master_schedule.Edges.LF]=l_fun_bwdPass(master_schedule,obj);
+            %calculate the total slack
+            master_schedule.Edges.TS=master_schedule.Edges.LS-master_schedule.Edges.ES;
         end
     end
 end
@@ -440,4 +344,112 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN NaN];
     %add BufferTracking column set to NaN to the master schedule Edges
     master_schedule.Edges.BufTrack(edge_index)=NaN;
+end
+
+function [ES,EF]=l_fun_fwdPass(master_schedule,obj)
+    %*** Perform Forward Pass - Calculate Early Start/Finish
+        s=successors(master_schedule,obj.start_node);
+        for i=1:length(s)
+            for j=1:length(master_schedule.Edges.Weight)
+                if strcmp(master_schedule.Edges.EndNodes(j,1),obj.start_node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
+                    master_schedule.Edges.ES(j)=0;
+                    master_schedule.Edges.EF(j)=master_schedule.Edges.Weight(j);
+                end
+            end
+        end
+
+        %brute force loop through remaining edges to calculate ES and EF
+        ct=1;
+        while any(isnan(master_schedule.Edges.ES)) || any(isnan(master_schedule.Edges.EF))
+            if isnan(master_schedule.Edges.ES(ct)) || isnan(master_schedule.Edges.EF(ct))
+                %check preceeding edges have EF calculated
+                node=master_schedule.Edges.EndNodes(ct,1);
+                p=predecessors(master_schedule,node);
+                for i=1:length(p)
+                    for j=1:length(master_schedule.Edges.Weight)
+                        if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),node)
+                            EF(i)=master_schedule.Edges.EF(j);
+                        end
+                    end
+                end
+
+                %check to ensure that ES and EF can be calculated then calculate
+                if ~any(isnan(EF))
+                    master_schedule.Edges.ES(ct)=max(EF);
+                    master_schedule.Edges.EF(ct)=max(EF)+master_schedule.Edges.Weight(ct);
+                end
+            end
+
+            %increment counter or reset counter
+            if ct>=length(master_schedule.Edges.ES)
+                ct=1;
+            else
+                ct=ct+1;
+            end
+
+            %clear EF variable
+            clear EF;
+        end
+        %*** End Forward Pass ***
+        ES=master_schedule.Edges.ES;
+        EF=master_schedule.Edges.EF;
+end
+
+function [LS,LF]=l_fun_bwdPass(master_schedule,obj)
+    %*** Perform Backward Pass - Calculate Late Start/Finish
+    p=predecessors(master_schedule,obj.end_node);
+    for i=1:length(p)
+        for j=1:length(master_schedule.Edges.Weight)
+            if strcmp(master_schedule.Edges.EndNodes(j,1),p(i)) && strcmp(master_schedule.Edges.EndNodes(j,2),obj.end_node)
+                %typically late finish would be calc as follows
+                %master_schedule.Edges.LF(j)=max(master_schedule.Edges.EF);
+                %however all End Lag edges are set to zero
+                %therefore the EF for the particular edge is used instead of the maximum function
+                %the if statement ensures that the first task can't start the sch_res late and alread eat up all of the management reserve
+                if master_schedule.Edges.EF(j)==0
+                    master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
+                else
+                    master_schedule.Edges.LF(j)=master_schedule.Edges.EF(j);
+                end
+                master_schedule.Edges.LS(j)=master_schedule.Edges.LF(j)-master_schedule.Edges.Weight(j);
+            end
+        end
+    end
+
+    %brute force loop through remaining edges to calculate LS and LF
+    ct=1;
+    while any(isnan(master_schedule.Edges.LS)) || any(isnan(master_schedule.Edges.LF))
+        if isnan(master_schedule.Edges.LS(ct)) || isnan(master_schedule.Edges.LF(ct))
+            %check preceeding edges have EF calculated
+            node=master_schedule.Edges.EndNodes(ct,2);
+            s=successors(master_schedule,node);
+            for i=1:length(s)
+                for j=1:length(master_schedule.Edges.Weight)
+                    if strcmp(master_schedule.Edges.EndNodes(j,1),node) && strcmp(master_schedule.Edges.EndNodes(j,2),s(i))
+                        LS(i)=master_schedule.Edges.LS(j);    
+                    end
+                end
+%                             LS(i)=master_schedule.Edges.LS(find(ismember(G.Edges.EndNodes,[node s(i)],'rows')));
+            end
+
+            %check to ensure that ES and EF can be calculated then calculate
+            if ~any(isnan(LS))
+                master_schedule.Edges.LF(ct)=min(LS);
+                master_schedule.Edges.LS(ct)=min(LS)-master_schedule.Edges.Weight(ct);
+            end
+
+            %clear LS variable
+            clear LS;
+        end
+
+        %increment counter or reset it
+        if ct>=length(master_schedule.Edges.ES)
+            ct=1;
+        else
+            ct=ct+1;
+        end
+    end
+    %*** End Backward Pass ***
+    LS=master_schedule.Edges.LS;
+    LF=master_schedule.Edges.LF;
 end
