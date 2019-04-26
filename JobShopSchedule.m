@@ -6,7 +6,7 @@ classdef JobShopSchedule < handle
         master_schedule %directed graph that contains the master schedule
         start_node %the starting node number
         end_node %the ending node number
-        sch_res %a buffer between work orders to provide ability to deliver on time
+        wo_buffer %a buffer between work orders to provide ability to deliver on time
     end
     
     methods
@@ -16,9 +16,9 @@ classdef JobShopSchedule < handle
 
             %create an empty directed graph
             obj.master_schedule=digraph([],[]);
-            obj.start_node={'Start'};
-            obj.end_node={'End'};
-            obj.sch_res=sch_res;
+            obj.start_node={'Start'}; %schedule starting node name
+            obj.end_node={'End'}; %schedule ending node name
+            obj.wo_buffer=wo_buffer; %buffer between work orders to provide ability to deliver on time
         end
         
         %add WOs to Job Shop master schedule
@@ -56,11 +56,11 @@ classdef JobShopSchedule < handle
                         %populate a structure with revised information
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=t_start;
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
                     else
                         revised_wo_dates.id(i)=wos_add_master(index(i)).unique_id;
                         revised_wo_dates.start_date(i)=revised_wo_dates.end_date(i-1);
-                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.sch_res;
+                        revised_wo_dates.end_date(i)=revised_wo_dates.start_date(i)+wos_add_master(index(i)).cp_duration+obj.wo_buffer;
                     end
                 end
                 %*** End Work Order Serialization***
@@ -96,6 +96,8 @@ classdef JobShopSchedule < handle
                         elseif rout_source~=1 && rout_target==2 %edge is the last routing operation
                             %add the last operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+                            %add the buffer edge to the schedule
+                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule);
 
@@ -104,6 +106,8 @@ classdef JobShopSchedule < handle
                             master_schedule=l_fun_leadEdge(obj,u_id,tempG,j,revised_wo_dates,i,master_schedule);
                             %add the only operation to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
+                            %add the buffer edge to the schedule
+                            master_schedule=l_fun_bufferEdge(u_id,tempG,j,obj,master_schedule);
                             %add the end lag edge to the schedule
                             master_schedule=l_fun_addOperation(u_id,tempG,j,master_schedule);
                             
