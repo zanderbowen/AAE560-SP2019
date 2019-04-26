@@ -8,7 +8,7 @@ plot_master=1;
 current_time=0;
 
 %instantiate customer object
-cust=Customer(0,0);
+cust=Customer(1,0);
 
 %instantiate director object
 dir=Director();
