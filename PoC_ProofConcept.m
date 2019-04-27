@@ -47,7 +47,11 @@ end
 js_sch=JobShopSchedule(2);
 
 %add WOs to master schedule
-[js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+[js_sch.master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+for i=1:length(wo_ef_initial.id)
+    js_wos(wo_ef_initial.id(i)).initial_start_edge_EF=wo_ef_initial.ef(i);
+end
+clear wo_ef_initial
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
@@ -69,7 +73,11 @@ for i=1:length(js_wos)
 end
 
 %add new WO to master schedule
-[js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+[js_sch.master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+for i=1:length(wo_ef_initial.id)
+    js_wos(wo_ef_initial.id(i)).initial_start_edge_EF=wo_ef_initial.ef(i);
+end
+clear wo_ef_initial
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
