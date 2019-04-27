@@ -13,6 +13,7 @@ classdef WorkOrder < handle
         total_CV=0; %total cost variance
         status %this lets one know what the status of the WO is, possibilities are (new, planned, in work, closed, canceled)
         master_schedule %boolean property to know if a particular WO object has been added to the master schedule
+        initial_start_edge_EF %an absolute value is needed to 
     end
     
     methods
@@ -24,6 +25,7 @@ classdef WorkOrder < handle
                     obj.due_date=due_date;
                     obj.status='new';
                     obj.master_schedule=0;
+                    obj.initial_start_edge_EF=NaN;
                     %assign unique id
                     if isempty(vec_u_id)
                         obj.unique_id=1;
