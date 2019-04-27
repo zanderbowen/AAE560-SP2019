@@ -42,6 +42,8 @@ for i=1:length(js_wos)
 end
 
 %instantiate Job Shop Schedule object
+%the value passed into the function is the buffer time the director would
+%set between work orders
 js_sch=JobShopSchedule(2);
 
 %add WOs to master schedule
@@ -117,14 +119,7 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 js_wos(1).routing.Edges.VendorPart(2)=1;
 js_wos(2).routing.Edges.VendorPart(1)=1;
 
-%supervisor to assign work to a machine and update WOs to released
-for i=1:length(sup)
-    %find all machines in a particular functional group that are idle
-    f_grp_idle_machines=findobj(m_arr,'functional_group',sup(i).functional_group,'-and','status','idle');
-    %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
-    [f_grp_idle_machines sup js_wos]=assignWork(sup,f_grp_idle_machines,js_wos,i,current_time);
-    clear f_grp_machines
-end
+
 
 %create an empty object array of Class Vendor
 ven=Vendor.empty;
@@ -132,17 +127,37 @@ ven=Vendor.empty;
 %instantiate vendor - #1
 ven=[ven; Vendor(1,[ven.unique_id],2)];
 
+%!!! for initial testing on updateMasterSchedule only !!!
+    for j=1:length(sup)
+        %find all machines in a particular functional group that are idle
+        f_grp_idle_machines=findobj(m_arr,'functional_group',sup(j).functional_group,'-and','status','idle');
+        %passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
+        [f_grp_idle_machines sup js_wos]=assignWork(sup,f_grp_idle_machines,js_wos,j,current_time);
+        clear f_grp_machines
+    end
+
+
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
 for i=1:max(js_sch.master_schedule.Edges.LF)
+    %supervisor to assign work to a machine and update WOs to released
+%     for j=1:length(sup)
+%         find all machines in a particular functional group that are idle
+%         f_grp_idle_machines=findobj(m_arr,'functional_group',sup(j).functional_group,'-and','status','idle');
+%         passing f_grp_machines back from the assign work function should update the m_arr object array accordingly
+%         [f_grp_idle_machines sup js_wos]=assignWork(sup,f_grp_idle_machines,js_wos,j,current_time);
+%         clear f_grp_machines
+%     end
     [run_machines js_wos]=performWork(findobj(m_arr,'status','running'),js_wos);
 end
 clear run_machines
 
-%testing the Vendor Class processPO method
+%testing the Vendor Class processPO method - !!! this should proceed
+%performWork method in the Machine class !!!
 ven=processPO(ven,js_wos,js_sch); 
 
-%testing the Vendor Class deliverPart method
+%testing the Vendor Class deliverPart method - !!! this should proceed
+%performWork method in the Machine class !!!
 for i=1:max(js_sch.master_schedule.Edges.LF)+1
     [ven js_wos]=deliverPart(ven,js_wos,i-1);
 end
