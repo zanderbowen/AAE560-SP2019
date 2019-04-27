@@ -163,34 +163,36 @@ classdef JobShopSchedule < handle
                     ms_s_node={[num2str(wo_id),'.',num2str(op_s_node)]};
                     ms_t_node={[num2str(wo_id),'.',num2str(op_t_node)]};
                     ms_index(j)=findedge(master_schedule,ms_s_node,ms_t_node);
-                    %used for extracting a sub-graph to get critical path
-                    %to update Lead starts later
-                    ms_index_start(j)=findedge(master_schedule,obj.start_node,{[num2str(wo_id),'.1']});
-                    ms_index_buffer(j)=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
-                    ms_index_end(j)=findedge(master_schedule,{['Buffer.',num2str(wo_id)]},obj.end_node);
-                    
-                    %updating the total consumed buffer
-                    buff_con_t=(op_planned_duration-op_hours_worked)+buff_con_t;
-                    
+
                     %an operation in work with hours exceeding the plan will be written to master schedule
                     %OR completed operations actual hours will be written to the master schedule
                     if op_hours_worked > op_planned_duration || strcmp(op_status,'complete')
                         %updating the master schedule edge weight to the greater value
                         master_schedule.Edges.Weight(ms_index(j))=op_hours_worked;
+                        %change the master schedule plot edge label accordingly
+                        master_schedule.Edges.EdgeLabel(ms_index(j))={[num2str(wo_id),'.',char(op_name),'=',num2str(op_hours_worked)]};
+                        %updating the total consumed buffer
+                        buff_con_t=(op_planned_duration-op_hours_worked)+buff_con_t;
                     end
                 end
                 ms_buffer_index=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
                 
                 %adjusting the WO buffer and tracking the total consumed
-                act_wo_cp=l_critcalPath(master_schedule,obj.start_node,{[num2str(wo_id),'.2']});
-                if (wo_cp-act_wo_cp)<0
+                act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
+                if (wo_cp-act_wo_cp)<-obj.wo_buffer
                     master_schedule.Edges.Weight(ms_buffer_index)=0;
                     master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
-                else
+                elseif (wo_cp-act_wo_cp)~=0
                     master_schedule.Edges.Weight(ms_buffer_index)=wo_cp-act_wo_cp;
                     master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(wo_cp-act_wo_cp)]};
                 end
                 master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
+                
+                %used for extracting a sub-graph to get critical path
+                    %to update Lead starts later
+                    ms_index_start(i)=findedge(master_schedule,obj.start_node,{[num2str(wo_id),'.1']});
+                    ms_index_buffer(i)=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
+                    ms_index_end(i)=findedge(master_schedule,{['Buffer.',num2str(wo_id)]},obj.end_node);
             end
             
             %calculate critical path for only the updated master schedule
@@ -229,6 +231,7 @@ classdef JobShopSchedule < handle
             %complete/in-work WOs
             lead_delta=ms_cp_updated-wo_ef(sort_index(1));
             total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
+            total_lead_available=wo_ef(sort_index(1))-ms_cp_updated;
             
             if lead_delta>0
                 for i=1:length(sort_index)
@@ -344,6 +347,12 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.RoutingEndNodes(edge_index,:)=[NaN NaN];
     %add BufferTracking column set to NaN to the master schedule Edges
     master_schedule.Edges.BufTrack(edge_index)=NaN;
+end
+
+function l_fun_buf_consumed()
+end
+
+function l_fun_early_completion()
 end
 
 function [ES,EF]=l_fun_fwdPass(master_schedule,obj)
