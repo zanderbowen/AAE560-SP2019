@@ -179,12 +179,17 @@ classdef JobShopSchedule < handle
                 
                 %adjusting the WO buffer and tracking the total consumed
                 act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
-                if (wo_cp-act_wo_cp)<-obj.wo_buffer
+                if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index) %more or exactly the amount of time in the buffer has been consumed
                     master_schedule.Edges.Weight(ms_buffer_index)=0;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
-                elseif (wo_cp-act_wo_cp)>=-obj.wo_buffer && (wo_cp-act_wo_cp)<0
-                    master_schedule.Edges.Weight(ms_buffer_index)=act_wo_cp-wo_cp;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(act_wo_cp-wo_cp)]};
+                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']}; %less time has been consumed than allocated to the buffer
+                elseif (wo_cp-act_wo_cp)>-master_schedule.Edges.Weight(ms_buffer_index)
+                    if all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
+                        master_schedule.Edges.Weight(ms_buffer_index)=0;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
+                    else
+                        master_schedule.Edges.Weight(ms_buffer_index)=act_wo_cp-wo_cp;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(act_wo_cp-wo_cp)]};
+                    end
                 end
                 master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
                 
@@ -237,7 +242,7 @@ classdef JobShopSchedule < handle
             end
             
             if lead_delta<0
-                master_schedule=l_fun_early_completion(abs(lead_delta), sort_index, master_schedule, ms_row_index, abs(total_buffer_consumed),ms_buf_row_index, obj);
+                master_schedule=l_fun_early_completion(abs(lead_delta), sort_index, master_schedule, ms_row_index, ms_buf_row_index);
             end
             %*** End Update Planned ***
 
@@ -334,7 +339,7 @@ function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_sched
         master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
 
         %update the buffer of the WO
-        if total_buffer_consumed>0
+        if total_buffer_consumed>obj.wo_buffer
             %determine the amount to reduce the buffer of the current WO
             if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
                 master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
@@ -356,7 +361,19 @@ function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_sched
     end
 end
 
-function l_fun_early_completion()
+function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index)
+    for i=1:length(sort_index)
+        %update the weight of the start lead edge
+        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))-lead_delta;
+        %update the EdgeLabel
+        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))-lead_delta)]};
+
+        %update the buffer of the WO - just add the extra buffer to the
+        %next WO to be worked, don't distribute it over all of the WOs
+        if i==1
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))+lead_delta;
+        end
+    end
 end
 
 function [ES,EF]=l_fun_fwdPass(master_schedule,obj)
