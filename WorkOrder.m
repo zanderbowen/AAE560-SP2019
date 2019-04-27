@@ -68,6 +68,18 @@ classdef WorkOrder < handle
             end
         end
         
+        function obj=closeWO(obj)
+            for i=1:length(obj)
+                %pull in the operation statuses
+                wo_status_vec=obj(i).routing.Edges.Status;
+                %check to see if all operations are complete
+                if all(strcmp(wo_status_vec,'complete'))
+                    %close the WO if all operations are complete
+                    obj(i).status='closed';
+                end
+            end
+        end
+        
         %method to calculate SV and CV
         %baseline will have supervisor push working hours after job is
         %complete - qualitiative approach that is typical in most shops
