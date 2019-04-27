@@ -2,7 +2,6 @@ clear;
 clc;
 close all;
 
-%flag to plot the schedule or not
 plot_master=1;
 
 %add a variable to simulate the timer
@@ -43,7 +42,7 @@ for i=1:length(js_wos)
 end
 
 %instantiate Job Shop Schedule object
-js_sch=JobShopSchedule(0);
+js_sch=JobShopSchedule(2);
 
 %add WOs to master schedule
 [js_sch.master_schedule revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
@@ -72,15 +71,15 @@ end
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
-%plotting the graph of the network schedule
-    if plot_master==1
+%plotting the graph of the network schedule - flag to plot is at top of code
+if plot_master==1
     figure;
     h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
     %try to layout the graph a little more like a Gantt Chart
     layout(h,'layered','Direction','right','Sources',1);
     %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-    % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
-    %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
 end
 
 %instantiate a an empty object array of class Supervisor
