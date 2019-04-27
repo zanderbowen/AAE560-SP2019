@@ -73,6 +73,9 @@ end
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
+%display the master_schedule before any operations are run Edges table
+js_sch.master_schedule.Edges
+
 %plotting the graph of the network schedule - flag to plot is at top of code
 if plot_master==1
     figure;
@@ -115,7 +118,7 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 %update work order
 
 %testing out assignWork and processPO supervisor and vendor methods
-%js_wos(1).routing.Edges.VendorPart(1)=1;
+js_wos(1).routing.Edges.VendorPart(1)=1;
 js_wos(1).routing.Edges.VendorPart(2)=1;
 js_wos(2).routing.Edges.VendorPart(1)=1;
 
@@ -139,7 +142,7 @@ ven=[ven; Vendor(1,[ven.unique_id],2)];
 
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
-for i=1:max(js_sch.master_schedule.Edges.LF)
+for i=1:5%max(js_sch.master_schedule.Edges.LF)
     %supervisor to assign work to a machine and update WOs to released
 %     for j=1:length(sup)
 %         find all machines in a particular functional group that are idle
