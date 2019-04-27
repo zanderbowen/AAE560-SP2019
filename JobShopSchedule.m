@@ -182,9 +182,9 @@ classdef JobShopSchedule < handle
                 if (wo_cp-act_wo_cp)<-obj.wo_buffer
                     master_schedule.Edges.Weight(ms_buffer_index)=0;
                     master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
-                elseif (wo_cp-act_wo_cp)~=0
-                    master_schedule.Edges.Weight(ms_buffer_index)=wo_cp-act_wo_cp;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(wo_cp-act_wo_cp)]};
+                elseif (wo_cp-act_wo_cp)>=-obj.wo_buffer && (wo_cp-act_wo_cp)<0
+                    master_schedule.Edges.Weight(ms_buffer_index)=act_wo_cp-wo_cp;
+                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(act_wo_cp-wo_cp)]};
                 end
                 master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
                 
@@ -231,36 +231,13 @@ classdef JobShopSchedule < handle
             %complete/in-work WOs
             lead_delta=ms_cp_updated-wo_ef(sort_index(1));
             total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
-            total_lead_available=wo_ef(sort_index(1))-ms_cp_updated;
-            
+
             if lead_delta>0
-                for i=1:length(sort_index)
-                    %update the weight of the start lead edge
-                    master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta;
-                    %update the EdgeLabel
-                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
-                    
-                    %update the buffer of the WO
-                    if total_buffer_consumed>0
-                        %determine the amount to reduce the buffer of the current WO
-                        if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
-                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
-                            %reduce the total buffer consumed by the amount deducted
-                            %from the WO being re-scheduled
-                            total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
-                            %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)]};
-                            
-                        else
-                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
-                            %reduce the total buffer consumed by the amount deducted
-                            %from the WO being re-scheduled
-                            total_buffer_consumed=0;
-                            %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)]};
-                        end
-                    end
-                end
+                master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_schedule, ms_row_index, total_buffer_consumed,ms_buf_row_index, obj);
+            end
+            
+            if lead_delta<0
+                master_schedule=l_fun_early_completion(abs(lead_delta), sort_index, master_schedule, ms_row_index, abs(total_buffer_consumed),ms_buf_row_index, obj);
             end
             %*** End Update Planned ***
 
@@ -349,7 +326,34 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.BufTrack(edge_index)=NaN;
 end
 
-function l_fun_buf_consumed()
+function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_schedule, ms_row_index, total_buffer_consumed,ms_buf_row_index, obj)
+    for i=1:length(sort_index)
+        %update the weight of the start lead edge
+        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta;
+        %update the EdgeLabel
+        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
+
+        %update the buffer of the WO
+        if total_buffer_consumed>0
+            %determine the amount to reduce the buffer of the current WO
+            if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
+                %reduce the total buffer consumed by the amount deducted
+                %from the WO being re-scheduled
+                total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)]};
+
+            else
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
+                %reduce the total buffer consumed by the amount deducted
+                %from the WO being re-scheduled
+                total_buffer_consumed=0;
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)]};
+            end
+        end
+    end
 end
 
 function l_fun_early_completion()
