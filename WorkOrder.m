@@ -96,7 +96,5 @@ classdef WorkOrder < handle
         %baseline will have supervisor push working hours after job is
         %complete - qualitiative approach that is typical in most shops
         %good feedback will have it calculated for each loop thru the timer
-        
-        
     end
 end
