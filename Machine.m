@@ -38,8 +38,12 @@ classdef Machine < handle
         
         function [obj js_wos]=performWork(obj,js_wos)
                 for i=1:length(obj)
+                    
                 %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
-                obj(i).op_actual_duration=obj(i).op_plan_duration;
+                %obj(i).op_actual_duration=obj(i).op_plan_duration;
+
+                %this is the call for the stochastic process - this is the worst case 
+                obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
                 
                 %pull in the routing table for the specific WO
                 r_table=js_wos(obj(i).wo_id).routing.Edges;
@@ -71,6 +75,7 @@ classdef Machine < handle
                 else
                     obj(i).op_status='complete';
                     obj(i).status='idle';
+                    obj(i).op_actual_duration=NaN; %resets actual work duration, in preparation for a new job
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
