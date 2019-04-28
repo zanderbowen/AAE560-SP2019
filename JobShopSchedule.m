@@ -390,9 +390,9 @@ function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_sched
 end
 
 function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index, wos_planned)
-    ct=1;
+    ct=1; %initialize the counter
 
-    while lead_delta>=0
+    while lead_delta>0 || ct<length(sort_index)
         if lead_delta<=wos_planned(sort_index(ct)).initial_start_edge_EF
             %update the EdgeLabel
             master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(ct)))=...
@@ -413,10 +413,36 @@ function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_s
                 master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+lead_delta;
             
             lead_delta=0;
-        else
-            warning('The an operation or work order completed so soon that WO ',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
-                ' will exhaust is full Star Lead Edge duration in compensation.');
+        else %early complete was so great that it needs to be spread over multiple WOs
+            warning('The operation or work order completed so soon that WO ',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                ' will exhaust is full Start Lead Edge duration to compensate.');
+            
+            temp_lead_edge=master_schedule.Edges.Weight(ms_row_index(sort_index(ct)));
+            
+                %update the EdgeLabel
+                master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(ct)))=...
+                    {['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(ct)))),...
+                    '=0']};
+                
+                %update the weight of the start lead edge
+                master_schedule.Edges.Weight(ms_row_index(sort_index(ct)))=0;
+                
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(ct)))=...
+                    {['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                    '=',num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+temp_lead_edge)]};
+                
+                %update the buffer of the WO
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))=...
+                    master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+temp_lead_edge;
+                
+                lead_delta=lead_delta-temp_lead_edge;
         end
+        ct=ct+1;
+    end
+    
+    if lead_delta>0
+        error('An early completing operation or work order could not be fully adjusted, the master schedule is inaccurate.');
     end
     
 end
