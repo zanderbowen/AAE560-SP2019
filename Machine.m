@@ -5,10 +5,11 @@ classdef Machine < handle
         machine_number %unique idenifer for each machine object instantiated
         full_name %functional_group.machine_number
         status %machine status is either 'idle' or 'running'
-        machine_hours %total hours worked on the work order
+        machine_hours=0 %total hours worked on the work order
         max_machine_hours %maximum hours alowed by the supervisor
         op_status %lets the supervisor know the mode of the operation: 'set-up', 'run', 'complete'
-        op_actual_duration %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
+        op_actual_duration=NaN %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
+        op_setup_tracker=0
         
         %these are properties from the WO that the machine is currently working on
         wo_id
@@ -54,13 +55,11 @@ classdef Machine < handle
                     %letting that the machine has the WO but not manufacturing
                     obj(i).op_status='set-up';
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
-                    obj(i).machine_hours=obj(i).machine_hours+1;
-                    
-                    %!!! add a property to capture set-up time !!!
+                    obj(i).op_setup_tracker=obj(i).op_setup_tracker+1;
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='set-up';
-                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).op_setup_tracker;
                     js_wos(obj(i).wo_id).status='in-work';
                 
                 elseif obj(i).machine_hours<obj(i).op_actual_duration
@@ -69,18 +68,22 @@ classdef Machine < handle
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='run';
-                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours+obj(i).op_setup_tracker;
                     js_wos(obj(i).wo_id).status='in-work';
                 
-                else
-                    obj(i).op_status='complete';
-                    obj(i).status='idle';
-                    obj(i).op_actual_duration=NaN; %resets actual work duration, in preparation for a new job
+                else %operation is assumed to be complete
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
-                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours;
+                    js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours+obj(i).op_setup_tracker;
                     js_wos(obj(i).wo_id).status='in-work';
+                    
+                    %re-initialize the object
+                    obj(i).op_status='complete';
+                    obj(i).status='idle';
+                    obj(i).op_actual_duration=NaN; %resets actual work duration, in preparation for a new job
+                    obj(i).op_setup_tracker=0;
+                    obj(i).machine_hours=0;
                 end
             end
         end
