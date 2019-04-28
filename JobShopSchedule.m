@@ -179,6 +179,8 @@ classdef JobShopSchedule < handle
                 ms_buffer_index=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
                 
                 %adjusting the WO buffer and tracking the total consumed
+                %!!! only if op_duration is exceeded or all operations are
+                %complete !!!
                 act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
                 if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index) %more or exactly the amount of time in the buffer has been consumed
                     if (wo_cp-act_wo_cp)<-master_schedule.Edges.Weight(ms_buffer_index) || all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
