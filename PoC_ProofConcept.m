@@ -198,3 +198,6 @@ end
 open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
 %call closeWO method to check to see if the WO status should be set to closed
 open_wos=closeWO(open_wos);
+
+%calculate SV
+js_wos = calcSV(js_wos);%calulates SV for each step and total SV

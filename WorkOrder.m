@@ -13,7 +13,7 @@ classdef WorkOrder < handle
         total_CV=0; %total cost variance
         status %this lets one know what the status of the WO is, possibilities are (new, planned, in work, closed, canceled)
         master_schedule %boolean property to know if a particular WO object has been added to the master schedule
-        initial_start_edge_EF %an absolute value is needed to 
+        initial_start_edge_EF %an absolute starting value is needed to correctly update the master schedule
     end
     
     methods
@@ -83,6 +83,16 @@ classdef WorkOrder < handle
         end
         
         %method to calculate SV and CV
+        
+        %create a function that calculates SV and total SV
+        function obj = calcSV(obj)
+            for i = 1:length(obj)
+                planned = obj(i).routing.Edges.Weight;
+                actual = obj(i).routing.Edges.HoursWorked;
+                obj(i).routing.Edges.SV = planned - actual;
+                obj(i).total_SV = sum(planned - actual);
+            end
+        end
         %baseline will have supervisor push working hours after job is
         %complete - qualitiative approach that is typical in most shops
         %good feedback will have it calculated for each loop thru the timer
