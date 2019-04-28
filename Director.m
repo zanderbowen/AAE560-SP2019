@@ -35,7 +35,7 @@ classdef Director < handle
             G.Edges.Operation=operation;                            
             
             %initializing the Vendor part required  column
-            G.Edges.VendorPart=zeros(length(weight),1);
+            G.Edges.VendorPart={'NA';'NA';'NA'};
             
             %initializing the Vendor part delivered column
             G.Edges.PartDelivered=zeros(length(weight),1);
