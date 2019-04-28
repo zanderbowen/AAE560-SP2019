@@ -20,7 +20,7 @@ classdef JobShopSchedule < handle
         end
         
         %add WOs to Job Shop master schedule
-        function [master_schedule revised_wo_dates]=addWoToMasterSchedule(obj,wos_add_master)
+        function [master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(obj,wos_add_master)
 
             %check to ensure there are work orders to add
             if ~isempty(wos_add_master)
@@ -115,18 +115,9 @@ classdef JobShopSchedule < handle
                         end
 
                     end
+                    
                 end
                 %*** End Add Operations Master Schedule***
-                
-                %fill the graph edges table with NaN values for ES, EF, LS & LF
-                
-                %pre-populate early/late start
-                master_schedule.Edges.ES=NaN([length(master_schedule.Edges.Weight) 1]);
-                master_schedule.Edges.LS=NaN([length(master_schedule.Edges.Weight) 1]);
-
-                %pre-populate early/late finish
-                master_schedule.Edges.EF=NaN([length(master_schedule.Edges.Weight) 1]);
-                master_schedule.Edges.LF=NaN([length(master_schedule.Edges.Weight) 1]);
                 
                 %*** Perform Forward Pass - Calculate Early Start/Finish
                 [master_schedule.Edges.ES,master_schedule.Edges.EF]=l_fun_fwdPass(master_schedule,obj);
@@ -136,6 +127,16 @@ classdef JobShopSchedule < handle
                 
                 %calculate the total slack
                 master_schedule.Edges.TS=master_schedule.Edges.LS-master_schedule.Edges.ES;
+                
+                %setting initial early finish in order to get an
+                %absolute value for updating the schedule later
+                for i=1:length(wos_add_master)
+                    if isnan(wos_add_master(i).initial_start_edge_EF)
+                        wo_ef_initial.id(i)=wos_add_master(i).unique_id;
+                        ms_st_ld_index=findedge(master_schedule,obj.start_node,{[num2str(wo_ef_initial.id(i)),'.1']});
+                        wo_ef_initial.ef(i)=master_schedule.Edges.EF(ms_st_ld_index);
+                    end
+                end
             end
         end
         
@@ -163,34 +164,54 @@ classdef JobShopSchedule < handle
                     ms_s_node={[num2str(wo_id),'.',num2str(op_s_node)]};
                     ms_t_node={[num2str(wo_id),'.',num2str(op_t_node)]};
                     ms_index(j)=findedge(master_schedule,ms_s_node,ms_t_node);
-                    %used for extracting a sub-graph to get critical path
-                    %to update Lead starts later
-                    ms_index_start(j)=findedge(master_schedule,obj.start_node,{[num2str(wo_id),'.1']});
-                    ms_index_buffer(j)=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
-                    ms_index_end(j)=findedge(master_schedule,{['Buffer.',num2str(wo_id)]},obj.end_node);
-                    
-                    %updating the total consumed buffer
-                    buff_con_t=(op_planned_duration-op_hours_worked)+buff_con_t;
-                    
+
                     %an operation in work with hours exceeding the plan will be written to master schedule
                     %OR completed operations actual hours will be written to the master schedule
                     if op_hours_worked > op_planned_duration || strcmp(op_status,'complete')
                         %updating the master schedule edge weight to the greater value
                         master_schedule.Edges.Weight(ms_index(j))=op_hours_worked;
+                        %change the master schedule plot edge label accordingly
+                        master_schedule.Edges.EdgeLabel(ms_index(j))={[num2str(wo_id),'.',char(op_name),'=',num2str(op_hours_worked)]};
+                        %updating the total consumed buffer
+                        buff_con_t=(op_planned_duration-op_hours_worked)+buff_con_t;
                     end
                 end
                 ms_buffer_index=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
                 
                 %adjusting the WO buffer and tracking the total consumed
-                act_wo_cp=l_critcalPath(master_schedule,obj.start_node,{[num2str(wo_id),'.2']});
-                if (wo_cp-act_wo_cp)<0
-                    master_schedule.Edges.Weight(ms_buffer_index)=0;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
-                else
-                    master_schedule.Edges.Weight(ms_buffer_index)=wo_cp-act_wo_cp;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(wo_cp-act_wo_cp)]};
+                %!!! only if op_duration is exceeded or all operations are
+                %complete !!!
+                act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
+                %only make changes to the buffer if the new critical path exceeds the old one or all the operations are closed to set the buffer to zero
+                if (wo_cp-act_wo_cp)<0 || all(strcmp(wos_in_work(i).routing.Edges.Status,'complete')) 
+                    if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index)  %WO has consumed all or more than the buffer
+                        if (wo_cp-act_wo_cp)<-master_schedule.Edges.Weight(ms_buffer_index)
+                            disp(['WO ',num2str(wo_id),' has consumed MORE than its allotted buffer.']);
+                        else
+                            disp(['WO ',num2str(wo_id),' has consumed its entire buffer.']);
+                        end
+                        master_schedule.Edges.Weight(ms_buffer_index)=0;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']}; %less time has been consumed than allocated to the buffer
+                    elseif (wo_cp-act_wo_cp)>-master_schedule.Edges.Weight(ms_buffer_index) && (wo_cp-act_wo_cp)<0 && ~all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
+                        %WO has consumed some of the buffer and not all the operations are complete
+                        master_schedule.Edges.Weight(ms_buffer_index)=act_wo_cp-wo_cp;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(act_wo_cp-wo_cp)]};
+                        disp(['WO ',num2str(wo_id),' has consumed some of its buffer.']);
+                    else
+                        %this statement should only be hit if the WO is
+                        %complete
+                        master_schedule.Edges.Weight(ms_buffer_index)=0;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
+                        disp(['WO ',num2str(wo_id),'s buffer has been set to zero.']);
+                    end
                 end
                 master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
+                
+                %used for extracting a sub-graph to get critical path
+                    %to update Lead starts later
+                    ms_index_start(i)=findedge(master_schedule,obj.start_node,{[num2str(wo_id),'.1']});
+                    ms_index_buffer(i)=findedge(master_schedule,{[num2str(wo_id),'.2']},{['Buffer.',num2str(wo_id)]});
+                    ms_index_end(i)=findedge(master_schedule,{['Buffer.',num2str(wo_id)]},obj.end_node);
             end
             
             %calculate critical path for only the updated master schedule
@@ -211,11 +232,11 @@ classdef JobShopSchedule < handle
             %loop thru wos_planned and store early finishes and corresponding
             %master schedule row indicies
             for i=1:length(wos_planned)
-                wo_id=wos_planned(i).unique_id; %WO unique ID
+                wo_id(i)=wos_planned(i).unique_id; %WO unique ID
                 wo_r_table=wos_planned(i).routing.Edges; %WO routing table
                 wo_cp=wos_planned(i).cp_duration; %WO planned critical path duration
-                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Start.Lead.',num2str(wo_id)]})); %master schedule row index of the Start.Lead.WO graph edge
-                ms_buf_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Buffer.',num2str(wo_id)]})); %master schedule row index of the Start.Lead.WO graph edge
+                ms_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Start.Lead.',num2str(wo_id(i))]})); %master schedule row index of the Start.Lead.WO graph edge
+                ms_buf_row_index(i)=find(contains(master_schedule.Edges.EdgeLabel,{['Buffer.',num2str(wo_id(i))]})); %master schedule row index of the Start.Lead.WO graph edge
                 wo_ef(i)=master_schedule.Edges.EF(ms_row_index(i)); %WO early finish in master schedule
             end
             
@@ -229,35 +250,14 @@ classdef JobShopSchedule < handle
             %complete/in-work WOs
             lead_delta=ms_cp_updated-wo_ef(sort_index(1));
             total_buffer_consumed=ms_cp_updated-wo_ef(sort_index(1));
-            
+
             if lead_delta>0
-                for i=1:length(sort_index)
-                    %update the weight of the start lead edge
-                    master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta;
-                    %update the EdgeLabel
-                    master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
-                    
-                    %update the buffer of the WO
-                    if total_buffer_consumed>0
-                        %determine the amount to reduce the buffer of the current WO
-                        if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
-                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
-                            %reduce the total buffer consumed by the amount deducted
-                            %from the WO being re-scheduled
-                            total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
-                            %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)]};
-                            
-                        else
-                            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
-                            %reduce the total buffer consumed by the amount deducted
-                            %from the WO being re-scheduled
-                            total_buffer_consumed=0;
-                            %adjust the buffer label
-                            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)]};
-                        end
-                    end
-                end
+                master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_schedule, ms_row_index, total_buffer_consumed,ms_buf_row_index, obj, wo_id, wos_planned);
+            end
+            
+            if lead_delta<0
+                lead_delta=abs(lead_delta);
+                master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index,wos_planned);
             end
             %*** End Update Planned ***
 
@@ -346,7 +346,112 @@ function master_schedule=l_fun_lagEdge(u_id,tempG,j,obj,master_schedule)
     master_schedule.Edges.BufTrack(edge_index)=NaN;
 end
 
+function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_schedule, ms_row_index, total_buffer_consumed,ms_buf_row_index, obj, wo_id, wos_planned)
+    
+    %as buffer is removed from upstream WOs it reduces the amount of
+    %lead_delta that is required to try to maintain the completion date -
+    %this variable corrects for that (for i=1 this will be zero)
+    lead_delta_offset=0;
+
+    for i=1:length(sort_index)
+        %update the weight of the start lead edge
+        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wos_planned(sort_index(i)).initial_start_edge_EF+lead_delta-lead_delta_offset;
+        %update the EdgeLabel
+        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',...
+            num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',...
+            num2str(wos_planned(sort_index(i)).initial_start_edge_EF+lead_delta-lead_delta_offset)]};
+
+        %update the buffer of the WO
+        if total_buffer_consumed>0
+            %determine the amount to reduce the buffer of the current WO
+            if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
+                lead_delta_offset=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))+lead_delta_offset;
+                %reduce the total buffer consumed by the amount deducted
+                %from the WO being re-scheduled
+                total_buffer_consumed=total_buffer_consumed-master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)));
+                %adjust the buffer accordingly
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(i)))={['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(0)]};
+
+            else
+                lead_delta_offset=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed+lead_delta_offset;
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(i)))=...
+                    {['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',...
+                    num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed)]};
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed;
+                %reduce the total buffer consumed by the amount deducted
+                %from the WO being re-scheduled
+                total_buffer_consumed=0;
+            end
+        end
+    end
+end
+
+function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index, wos_planned)
+    ct=1; %initialize the counter
+
+    while lead_delta>0 || ct<length(sort_index)
+        if lead_delta<=wos_planned(sort_index(ct)).initial_start_edge_EF
+            %update the EdgeLabel
+            master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(ct)))=...
+                {['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(ct)))),...
+                '=',num2str(wos_planned(sort_index(ct)).initial_start_edge_EF-lead_delta)]};
+
+            %update the weight of the start lead edge
+            master_schedule.Edges.Weight(ms_row_index(sort_index(ct)))=...
+                wos_planned(sort_index(ct)).initial_start_edge_EF-lead_delta;
+
+            %adjust the buffer label
+            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(ct)))=...
+                {['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                '=',num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+lead_delta)]};
+            %update the buffer of the WO - just add the extra buffer to the
+            %next WO to be worked, don't distribute it over all of the WOs
+            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))=...
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+lead_delta;
+            
+            lead_delta=0;
+        else %early complete was so great that it needs to be spread over multiple WOs
+            warning('The operation or work order completed so soon that WO ',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                ' will exhaust is full Start Lead Edge duration to compensate.');
+            
+            temp_lead_edge=master_schedule.Edges.Weight(ms_row_index(sort_index(ct)));
+            
+                %update the EdgeLabel
+                master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(ct)))=...
+                    {['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(ct)))),...
+                    '=0']};
+                
+                %update the weight of the start lead edge
+                master_schedule.Edges.Weight(ms_row_index(sort_index(ct)))=0;
+                
+                %adjust the buffer label
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(ct)))=...
+                    {['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                    '=',num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+temp_lead_edge)]};
+                
+                %update the buffer of the WO
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))=...
+                    master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+temp_lead_edge;
+                
+                lead_delta=lead_delta-temp_lead_edge;
+        end
+        ct=ct+1;
+    end
+    
+    if lead_delta>0
+        error('An early completing operation or work order could not be fully adjusted, the master schedule is inaccurate.');
+    end
+    
+end
+
 function [ES,EF]=l_fun_fwdPass(master_schedule,obj)
+    %fill the graph edges table with NaN values for ES & LS
+    master_schedule.Edges.ES=NaN([length(master_schedule.Edges.Weight) 1]);
+    master_schedule.Edges.EF=NaN([length(master_schedule.Edges.Weight) 1]);
+    
     %*** Perform Forward Pass - Calculate Early Start/Finish
         s=successors(master_schedule,obj.start_node);
         for i=1:length(s)
@@ -396,6 +501,10 @@ function [ES,EF]=l_fun_fwdPass(master_schedule,obj)
 end
 
 function [LS,LF]=l_fun_bwdPass(master_schedule,obj)
+    %fill the graph edges table with NaN values for LS & LF
+    master_schedule.Edges.LS=NaN([length(master_schedule.Edges.Weight) 1]);
+    master_schedule.Edges.LF=NaN([length(master_schedule.Edges.Weight) 1]);    
+
     %*** Perform Backward Pass - Calculate Late Start/Finish
     p=predecessors(master_schedule,obj.end_node);
     for i=1:length(p)
