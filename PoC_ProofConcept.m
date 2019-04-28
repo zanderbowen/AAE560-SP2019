@@ -150,7 +150,7 @@ ven=[ven; Vendor(1,[ven.unique_id],2)];
 
 %for testing purposes after a supervisor has assigned work since I don't
 %have the timer wrapper right now
-for i=1:9%max(js_sch.master_schedule.Edges.LF)
+for i=1:max(js_sch.master_schedule.Edges.LF)
     %supervisor to assign work to a machine and update WOs to released
 %     for j=1:length(sup)
 %         find all machines in a particular functional group that are idle
