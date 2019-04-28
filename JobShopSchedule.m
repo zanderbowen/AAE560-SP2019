@@ -182,18 +182,27 @@ classdef JobShopSchedule < handle
                 %!!! only if op_duration is exceeded or all operations are
                 %complete !!!
                 act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
-                if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index) %more or exactly the amount of time in the buffer has been consumed
-                    if (wo_cp-act_wo_cp)<-master_schedule.Edges.Weight(ms_buffer_index) || all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
+                %only make changes to the buffer if the new critical path exceeds the old one or all the operations are closed to set the buffer to zero
+                if (wo_cp-act_wo_cp)<0 || all(strcmp(wos_in_work(i).routing.Edges.Status,'complete')) 
+                    if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index)  %WO has consumed all or more than the buffer
+                        if (wo_cp-act_wo_cp)<-master_schedule.Edges.Weight(ms_buffer_index)
+                            disp(['WO ',num2str(wo_id),' has consumed MORE than its allotted buffer.']);
+                        else
+                            disp(['WO ',num2str(wo_id),' has consumed its entire buffer.']);
+                        end
                         master_schedule.Edges.Weight(ms_buffer_index)=0;
                         master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']}; %less time has been consumed than allocated to the buffer
-                    end
-                elseif (wo_cp-act_wo_cp)>-master_schedule.Edges.Weight(ms_buffer_index)
-                    if all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
-                        master_schedule.Edges.Weight(ms_buffer_index)=0;
-                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
-                    else
+                    elseif (wo_cp-act_wo_cp)>-master_schedule.Edges.Weight(ms_buffer_index) && (wo_cp-act_wo_cp)<0 && ~all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
+                        %WO has consumed some of the buffer and not all the operations are complete
                         master_schedule.Edges.Weight(ms_buffer_index)=act_wo_cp-wo_cp;
                         master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=',num2str(act_wo_cp-wo_cp)]};
+                        disp(['WO ',num2str(wo_id),' has consumed some of its buffer.']);
+                    else
+                        %this statement should only be hit if the WO is
+                        %complete
+                        master_schedule.Edges.Weight(ms_buffer_index)=0;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']};
+                        disp(['WO ',num2str(wo_id),'s buffer has been set to zero.']);
                     end
                 end
                 master_schedule.Edges.BufTrack(ms_buffer_index)=buff_con_t;
