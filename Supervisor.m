@@ -95,6 +95,7 @@ function job_queue=l_fun_getWork(ms_e_table,fun_grp,job_queue)
     job_queue.ef=ms_e_table.EF(row_index(s_index)); %early finish
     job_queue.lf=ms_e_table.LF(row_index(s_index)); %late finish
     job_queue.duration=ms_e_table.Weight(row_index(s_index)); %duration
+    job_queue.duration=ms_e_table.Weight(row_index(s_index));%actual duration
     %add a blank status into the job_queue
     for i=1:length(job_queue.wo_id)
         job_queue.status{i}='';
