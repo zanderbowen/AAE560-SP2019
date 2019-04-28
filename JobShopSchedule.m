@@ -181,8 +181,10 @@ classdef JobShopSchedule < handle
                 %adjusting the WO buffer and tracking the total consumed
                 act_wo_cp=l_critcalPath(master_schedule,{[num2str(wo_id),'.1']},{[num2str(wo_id),'.2']});
                 if (wo_cp-act_wo_cp)<=-master_schedule.Edges.Weight(ms_buffer_index) %more or exactly the amount of time in the buffer has been consumed
-                    master_schedule.Edges.Weight(ms_buffer_index)=0;
-                    master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']}; %less time has been consumed than allocated to the buffer
+                    if (wo_cp-act_wo_cp)<-master_schedule.Edges.Weight(ms_buffer_index) || all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
+                        master_schedule.Edges.Weight(ms_buffer_index)=0;
+                        master_schedule.Edges.EdgeLabel(ms_buffer_index)={['Buffer.',num2str(wo_id),'=0']}; %less time has been consumed than allocated to the buffer
+                    end
                 elseif (wo_cp-act_wo_cp)>-master_schedule.Edges.Weight(ms_buffer_index)
                     if all(strcmp(wos_in_work(i).routing.Edges.Status,'complete'))
                         master_schedule.Edges.Weight(ms_buffer_index)=0;
@@ -243,7 +245,8 @@ classdef JobShopSchedule < handle
             end
             
             if lead_delta<0
-                master_schedule=l_fun_early_completion(abs(lead_delta), sort_index, master_schedule, ms_row_index, ms_buf_row_index, wo_id);
+                lead_delta=abs(lead_delta);
+                master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index,wos_planned);
             end
             %*** End Update Planned ***
 
@@ -375,20 +378,34 @@ function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_sched
     end
 end
 
-function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index)
+function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index, wos_planned)
     ct=1;
 
-    while lead_delta<=0
+    while lead_delta>=0
         if lead_delta<=wos_planned(sort_index(ct)).initial_start_edge_EF
-        %update the weight of the start lead edge
-        master_schedule.Edges.Weight(ms_row_index(sort_index(1)))=wos_planned(sort_index(i)).initial_start_edge_EF-lead_delta;
-        %update the EdgeLabel
-        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(wos_planned(sort_index(i)).initial_start_edge_EF-lead_delta)]};
+            %update the EdgeLabel
+            master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(ct)))=...
+                {['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(ct)))),...
+                '=',num2str(wos_planned(sort_index(ct)).initial_start_edge_EF-lead_delta)]};
 
-        %update the buffer of the WO - just add the extra buffer to the
-        %next WO to be worked, don't distribute it over all of the WOs
+            %update the weight of the start lead edge
+            master_schedule.Edges.Weight(ms_row_index(sort_index(ct)))=...
+                wos_planned(sort_index(ct)).initial_start_edge_EF-lead_delta;
 
-        master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))+lead_delta;
+            %adjust the buffer label
+            master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(ct)))=...
+                {['Buffer.',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                '=',num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+lead_delta)]};
+            %update the buffer of the WO - just add the extra buffer to the
+            %next WO to be worked, don't distribute it over all of the WOs
+            master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))=...
+                master_schedule.Edges.Weight(ms_buf_row_index(sort_index(ct)))+lead_delta;
+            
+            lead_delta=0;
+        else
+            warning('The an operation or work order completed so soon that WO ',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(ct)))),...
+                ' will exhaust is full Star Lead Edge duration in compensation.');
+        end
     end
     
 end
