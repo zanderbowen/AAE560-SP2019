@@ -345,12 +345,12 @@ end
 function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_schedule, ms_row_index, total_buffer_consumed,ms_buf_row_index, obj, wo_id, wos_planned)
     for i=1:length(sort_index)
         %update the weight of the start lead edge
-        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wos_planned(wo_id(sort_index(i))).initial_start_edge_EF+lead_delta;
+        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wos_planned(sort_index(i)).initial_start_edge_EF+lead_delta;
         %update the EdgeLabel
-        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))+lead_delta)]};
+        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(wos_planned(sort_index(i)).initial_start_edge_EF+lead_delta)]};
 
         %update the buffer of the WO
-        if total_buffer_consumed>obj.wo_buffer
+        if total_buffer_consumed>0
             %determine the amount to reduce the buffer of the current WO
             if total_buffer_consumed>=master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))
                 master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))=0;
@@ -366,7 +366,7 @@ function master_schedule=l_fun_buf_consumed(lead_delta, sort_index, master_sched
                 %from the WO being re-scheduled
                 total_buffer_consumed=0;
                 %adjust the buffer label
-                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(obj.wo_buffer-total_buffer_consumed)]};
+                master_schedule.Edges.EdgeLabel(ms_buf_row_index(sort_index(1)))={['Buffer',num2str(master_schedule.Edges.EdgeWO(ms_buf_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_buf_row_index(sort_index(i)))-total_buffer_consumed)]};
             end
         end
     end
@@ -375,9 +375,9 @@ end
 function master_schedule=l_fun_early_completion(lead_delta, sort_index, master_schedule, ms_row_index, ms_buf_row_index)
     for i=1:length(sort_index)
         %update the weight of the start lead edge
-        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=master_schedule.Edges.Weight(ms_row_index(sort_index(i)))-lead_delta;
+        master_schedule.Edges.Weight(ms_row_index(sort_index(i)))=wos_planned(sort_index(i)).initial_start_edge_EF-lead_delta;
         %update the EdgeLabel
-        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(master_schedule.Edges.Weight(ms_row_index(sort_index(i)))-lead_delta)]};
+        master_schedule.Edges.EdgeLabel(ms_row_index(sort_index(i)))={['Start.Lead.',num2str(master_schedule.Edges.EdgeWO(ms_row_index(sort_index(i)))),'=',num2str(wos_planned(sort_index(i)).initial_start_edge_EF-lead_delta)]};
 
         %update the buffer of the WO - just add the extra buffer to the
         %next WO to be worked, don't distribute it over all of the WOs
