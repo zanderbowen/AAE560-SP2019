@@ -1,4 +1,4 @@
-function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
+function [comm_net] = CommunicationNetwork3(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
 
 %*** Enterprise Resource Planning as Central Node of Information ***
 % Maintain the typical hub and spoke network as well (hub and spoke for
