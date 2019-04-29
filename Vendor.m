@@ -44,7 +44,7 @@ classdef Vendor < handle
                     %assuming only a single vendor in this model
                     
                     %mark the part ordered in the WO routing.Edges table
-                    js_wos(u_id).routing.Edges.VendorPart(row_index(j))='ordered';
+                    js_wos(u_id).routing.Edges.VendorPart{(row_index(j))}='ordered';
                     
                     %obj.vendor_po=struct('wo_id',[],'operation',{},'delivery_date',[],'status',{});
                     obj(1).vendor_po.wo_id(ct)=u_id; %WO unique ID
@@ -85,14 +85,15 @@ classdef Vendor < handle
             
             for i=1:length(v_po_index)
                 %check to see if they can be delivered
-                if obj(1).actual_delivery_date(v_po_index(i))==current_time
+                if obj(1).actual_delivery_date(v_po_index(i))<=current_time
                     %set PartDelivered flag in WO to 1
                     %find row index in WO routing table
                     wo_id=obj(1).vendor_po.wo_id(v_po_index(i));
                     r_table=js_wos(wo_id).routing.Edges;
                     r_table_index=find(strcmp(r_table.Operation,obj(1).vendor_po.operation{v_po_index(i)}));
-                    js_wos(wo_id).routing.Edges.PartDelivered(r_table_index)=1;
+                    js_wos(wo_id).routing.Edges.VendorPart{r_table_index}='received';
                     obj(1).vendor_po.status{v_po_index(i)}='delivered';
+                    disp(['Part for WO ',num2str(wo_id),' Operation ',char(r_table.Operation(r_table_index)),' was received at ',num2str(current_time),'.']);
                 end
             end
         end
