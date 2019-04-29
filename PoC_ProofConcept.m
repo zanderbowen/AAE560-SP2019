@@ -126,9 +126,9 @@ m_arr=[m_arr; Machine('B',{sup.functional_group},1,[m_arr.full_name],8)];
 %update work order
 
 %testing out assignWork and processPO supervisor and vendor methods
-%js_wos(1).routing.Edges.VendorPart(1)=1;
-js_wos(1).routing.Edges.VendorPart(2)=1;
-js_wos(2).routing.Edges.VendorPart(1)=1;
+%js_wos(1).routing.Edges.VendorPart{1}='required';
+js_wos(1).routing.Edges.VendorPart{2}='required';
+js_wos(2).routing.Edges.VendorPart{1}='required';
 
 
 
@@ -136,7 +136,9 @@ js_wos(2).routing.Edges.VendorPart(1)=1;
 ven=Vendor.empty;
 
 %instantiate vendor - #1
-ven=[ven; Vendor(1,[ven.unique_id],2)];
+% after ven.unique_id, the following input arguments are...
+%delivery buffer, lambda for poisson distribution, stochastic behavior on delivery 'y' or 'n'
+ven=[ven; Vendor(1,[ven.unique_id],2,5,'y')];
 
 %!!! for initial testing on updateMasterSchedule only !!!
     for j=1:length(sup)
@@ -165,7 +167,7 @@ clear run_machines
 
 %testing the Vendor Class processPO method - !!! this should proceed
 %performWork method in the Machine class !!!
-ven=processPO(ven,js_wos,js_sch); 
+[ven js_wos]=processPO(ven,js_wos,js_sch); 
 
 %testing the Vendor Class deliverPart method - !!! this should proceed
 %performWork method in the Machine class !!!
