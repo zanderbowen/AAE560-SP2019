@@ -50,7 +50,8 @@ classdef Machine < handle
                 %find the row index for the operation in the routing table
                 row_index=find(strcmp(r_table.Operation,obj(i).functional_group));
                 
-                if obj(i).vendor_part==1 && r_table.PartDelivered(row_index)==0
+                if strcmp(r_table.VendorPart(row_index),'required') || strcmp(r_table.VendorPart(row_index),'ordered')
+                    disp(['WO ',num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),' part is ',char(r_table.VendorPart(row_index)),'.']);
                     %letting that the machine has the WO but not manufacturing
                     obj(i).op_status='set-up';
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
