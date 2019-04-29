@@ -53,7 +53,7 @@ clc;
 comm_net = CommunicationNetwork(dir, cust, sup, mach, rec, ven);
 
 %   Plot the network:
-NetworkMeasures(comm_net)
+NetworkMeasures(comm_net);
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
