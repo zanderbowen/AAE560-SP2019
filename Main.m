@@ -1,6 +1,5 @@
 clear all;
 clc;
-%delete(findall(0));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %-------------------------------------------------------------------------%
@@ -35,7 +34,7 @@ clc;
 %   Machines, and 1 Receiving focal.
 
 %   Create Vendor Base:
-[ven] = createVendor(1,2);
+[ven] = createVendor(1,2,5,'y');
 %   In this case, one Vendor is used.  This Vendor is an abstract
 %   representation of a larger Vendor base, and has an early delivery
 %   requirement of 2.
@@ -54,7 +53,7 @@ clc;
 comm_net = CommunicationNetwork(dir, cust, sup, mach, rec, ven);
 
 %   Plot the network:
-plot(comm_net)
+NetworkMeasures(comm_net)
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,8 +74,8 @@ plot(comm_net)
 js_wos=WorkOrder.empty;
 
 %Now populate work order with desired number and due dates
-[ js_wos, cust ] = createWO(5, 10, cust, js_wos);
-[ js_wos, cust ] = createWO(5, 20, cust, js_wos);
+[ js_wos, cust ] = createWO(2, 10, cust, js_wos);
+%[ js_wos, cust ] = createWO(5, 20, cust, js_wos);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -96,48 +95,86 @@ js_wos=WorkOrder.empty;
 [js_wos] = routing( js_wos, dir );
 
 %instantiate Job Shop Schedule object
-js_sch=JobShopSchedule(0);
+%the value passed into the function is the buffer time the director would
+%set between work orders
+js_sch=JobShopSchedule(2);
 
 %add WOs to master schedule
-[js_sch.master_schedule, revised_wo_dates]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+[js_sch.master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+for i=1:length(wo_ef_initial.id)
+    js_wos(wo_ef_initial.id(i)).initial_start_edge_EF=wo_ef_initial.ef(i);
+end
+clear wo_ef_initial
 %update start and end dates and master_schedule flag
 js_wos=updateDates(js_wos,revised_wo_dates);
 
-%plotting the graph of the network schedule
-figure;
-h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-%try to layout the graph a little more like a Gantt Chart
-layout(h,'layered','Direction','right','Sources',1);
-%layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-% [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
-%needs some work... labelnode(h,unique([source target]),HideNodeNames);
+%display the master_schedule before any operations are run Edges table
+js_sch.master_schedule.Edges;
+
+plot_master=1;
+
+%plotting the graph of the network schedule - flag to plot is at top of code
+if plot_master==1
+    figure;
+    h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+    %try to layout the graph a little more like a Gantt Chart
+    layout(h,'layered','Direction','right','Sources',1);
+    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+end
 
 %-------------------------------------------------------------------------%
 %   3.B Route Vendor and Job Shop                                         %
 %-------------------------------------------------------------------------%
 
-for i=1:length(js_wos)
-    hours = 0;
-    max_hours = 40;
+hours = 0;
+max_hours = 40;
     
-  
-    while hours < max_hours
+ while hours <= max_hours
+     
+     for i=1:length(js_wos)
         if sum(strcmp(js_wos(i).routing.Edges.Status,'complete')) < ...
-                length(js_wos(i).routing.Edges.Operation)
-            
-                for j = 1:length(js_wos(i).routing.Edges.Operation)
-                        js_wos(i).routing.Edges.VendorPart(j) = 1;
-                end
-                    
-                [ t, ven, js_wos, js_sch, sup, mach ] = ...
-                    routeWOs(js_wos, js_sch, ven, sup, mach, hours);
-                start(t);
-                hours = hours +1;
+            length(js_wos(i).routing.Edges.Operation)
+                  
+            while sum(strcmp(js_wos(i).routing.Edges.Status,'complete')) < ...
+               length(js_wos(i).routing.Edges.Operation)
+           
+               if hours <= max_hours
+                                      
+               [ t, ven, js_wos, js_sch, sup, mach ] = ...
+                   routeWOs(js_wos, js_sch, ven, sup, mach, hours);
+               start(t);
+%                
+%                %search for open work order (i.e. not closed or cancelled)
+%                open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
+%                %call closeWO method to check to see if the WO status should be set to closed
+%                open_wos=closeWO(open_wos);
+%                
+%                %calculate SV
+%                js_wos = calcSV(js_wos);%calulates SV for each step and total SV
+               
+               hours = hours +1;
+               
+               else
+                   break                
+               end
 
-        else
-            hours = max_hours;
+            end
+           
         end
-
+                
+     end
+       
+        
     end
-end
 
+if plot_master==1
+    figure;
+    h1=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+    %try to layout the graph a little more like a Gantt Chart
+    layout(h1,'layered','Direction','right','Sources',1);
+    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+end
