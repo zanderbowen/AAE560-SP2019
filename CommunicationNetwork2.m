@@ -26,7 +26,7 @@ comm_net=addnode(comm_net,source);
 %build the director-customer links
 for i=1:length(cust_vec)
     target={['Customer.',num2str(cust_vec(i).unique_id)]};
-    weight= 1;
+    weight= 4;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -34,14 +34,14 @@ end
 %assume there is only one supervisor per machine group
 for i=1:length(sup_vec)
     target={['Supervisor.',sup_vec(i).functional_group]};
-    weight = 1;
+    weight = 3;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
 %build the director-machine links
 for i=1:length(mach_vec)
     target=['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)];
-    weight = 1;
+    weight = 3;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -50,7 +50,7 @@ end
 for i=1:length(mach_vec)
     source={['Supervisor.',mach_vec(i).functional_group]};
     target={['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)]};
-    weight = 1;
+    weight = 2;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -59,7 +59,7 @@ end
 target={'Receiving'};
 for i=1:length(sup_vec)
     source={['Supervisor.',sup_vec(i).functional_group]};
-    weight = 1;
+    weight = 3;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -67,7 +67,7 @@ end
 target={'Receiving'};
 for i=1:length(mach_vec)
     source={['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)]};
-    weight = 1;
+    weight = 3;
     comm_net=addedge(comm_net,source,target,weight);
 end
 
@@ -76,6 +76,6 @@ end
 target={'Receiving'};
 for i=1:length(ven_vec)
     source={['Vendor.',num2str(ven_vec(i).unique_id)]};
-    weight = 1;
+    weight = 4;
     comm_net=addedge(comm_net,source,target,weight);
 end

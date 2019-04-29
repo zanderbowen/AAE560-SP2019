@@ -1,6 +1,6 @@
 function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
 
-%*** Abstracted Status Quo Network of a Typical Job Shop ***
+%*** Small World-ish Network Where Machines Connects to Receiving Directly ***
 
 %Input director, supervisor, machine, vendor, customer, and receiving
 %object vectors/arrays. Generate the network topology used to communicate within
@@ -52,6 +52,14 @@ end
 target={'Receiving'};
 for i=1:length(sup_vec)
     source={['Supervisor.',sup_vec(i).functional_group]};
+    weight = 3;
+    comm_net=addedge(comm_net,source,target,weight);
+end
+
+%build the machine-receiving links
+target={'Receiving'};
+for i=1:length(mach_vec)
+    source={['Machine.',mach_vec(i).functional_group,num2str(mach_vec(i).machine_number)]};
     weight = 3;
     comm_net=addedge(comm_net,source,target,weight);
 end
