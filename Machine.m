@@ -77,12 +77,14 @@ classdef Machine < handle
                     %write to command line that the machine is working
                     disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), ' is working on WO ',...
                         num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),'.']);
+                end
                 
-                else %operation is assumed to be complete
+                if obj(i).machine_hours>=obj(i).op_actual_duration %operation is assumed to be complete
                     
                     %write to command line that the machine has completed work
-                    disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), 'completed WO ',...
-                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),'.']);
+                    disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), ' completed WO ',...
+                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),' with a duration of ',...
+                        num2str(obj(i).machine_hours),'.']);
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
