@@ -93,7 +93,8 @@ classdef Vendor < handle
                     r_table_index=find(strcmp(r_table.Operation,obj(1).vendor_po.operation{v_po_index(i)}));
                     js_wos(wo_id).routing.Edges.VendorPart{r_table_index}='received';
                     obj(1).vendor_po.status{v_po_index(i)}='delivered';
-                    disp(['Part for WO ',num2str(wo_id),' Operation ',char(r_table.Operation(r_table_index)),' was received at ',num2str(current_time),'.']);
+                    disp(['Vendor Class deliverPart(): Part for WO ',num2str(wo_id),' Operation ',...
+                        char(r_table.Operation(r_table_index)),' was received at ',num2str(current_time),'.']);
                 end
             end
         end
