@@ -283,6 +283,7 @@ classdef JobShopSchedule < handle
             disp(['Planning Message: At time ', num2str(current_time),' WO ', num2str(ms_e_table.EdgeWO(r_index(index))),...
                 ' Operation ',char(ms_e_table.OperationWO(r_index(index))),' should be worked with an Early Start of ',...
                 num2str(ms_e_table.ES(r_index(index))),'.']);
+                ms_e_table(sort(r_index),{'EdgeWO','OperationWO','ES','EF','LS','LF'})
         end
     end
 end
