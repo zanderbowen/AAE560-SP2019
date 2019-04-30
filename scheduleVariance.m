@@ -1,0 +1,29 @@
+function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, mach)
+%SCHEDULEVARIANCE Summary of this function goes here
+%   Detailed explanation goes here
+
+%For a given machine, representing the work required on a work order
+actual_duration=poissrnd(planned_duration);
+
+source = comm_net.Edges.EndNodes(:,1);
+target = comm_net.Edges.EndNodes(:,2);
+weights = comm_net.Edges.Weight;
+G = graph(source, target, weights);
+
+[dir_P, d_length] = shortestpath(G,'Director','Machine.A1');
+[ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.A1');
+
+dir_time_reduction = 1/d_length;
+ven_time_reduction = 1/v_length;
+
+if actual_duration > planned_duration
+    total_time_reduction = dir_time_reduction + ven_time_reduction;
+    actual_duration = actual_duration - total_time_reduction;
+
+end
+
+js_wos.routing.Edges.SV = planned_duration - actual_duration;
+js_wos.total_SV = sum(planned_duration- actual_duration);
+
+end
+
