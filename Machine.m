@@ -10,6 +10,7 @@ classdef Machine < handle
         op_status %lets the supervisor know the mode of the operation: 'set-up', 'run', 'complete'
         op_actual_duration=NaN %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
         op_setup_tracker=0
+        set_actual=1 %tells the machine whether or not to calculate the actual duration
         
         %these are properties from the WO that the machine is currently working on
         wo_id
@@ -43,8 +44,12 @@ classdef Machine < handle
                 %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
                 %obj(i).op_actual_duration=obj(i).op_plan_duration;
 
-                %this is the call for the stochastic process - this is the worst case 
-                obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
+                if obj(i).set_actual==1
+                    %this is the call for the stochastic process - this is the worst case 
+                    obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
+                    %set flag to 0, re-initialze to 1 once work is complete
+                    obj(i).set_actual=0;
+                end
                 
                 %pull in the routing table for the specific WO
                 r_table=js_wos(obj(i).wo_id).routing.Edges;
@@ -76,7 +81,8 @@ classdef Machine < handle
                     
                     %write to command line that the machine is working
                     disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), ' is working on WO ',...
-                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),'.']);
+                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),' with an actual duration of ',...
+                        num2str(obj(i).op_actual_duration),'.']);
                 end
                 
                 if obj(i).machine_hours>=obj(i).op_actual_duration %operation is assumed to be complete
@@ -97,6 +103,7 @@ classdef Machine < handle
                     obj(i).op_actual_duration=NaN; %resets actual work duration, in preparation for a new job
                     obj(i).op_setup_tracker=0;
                     obj(i).machine_hours=0;
+                    obj(i).set_actual=1;
                 end
             end
         end
