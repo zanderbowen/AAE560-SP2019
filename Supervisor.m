@@ -53,7 +53,9 @@ classdef Supervisor < handle
                     %first condition is that WO status is planned
                     %second condition is that the current time falls between the operation's early start and late start times determined by the master schedule
                     if strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Status(wo_op_r_index),'planned') &&...
-                            all([obj(i).job_queue.es(ct2)<=current_time, current_time<=obj(i).job_queue.ls(ct2)])
+                        all([obj(i).job_queue.es(ct2)<=current_time, current_time<=obj(i).job_queue.ls(ct2)])
+                    %obj(i).job_queue.es(ct2)<=current_time %this only works for serial WOs and Operations       
+
 
                         %set the machine status to running
                         f_grp_idle_machines(k).status='running';
