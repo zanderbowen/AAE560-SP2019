@@ -41,10 +41,10 @@ classdef Machine < handle
                 for i=1:length(obj)
                     
                 %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
-                obj(i).op_actual_duration=obj(i).op_plan_duration;
+                %obj(i).op_actual_duration=obj(i).op_plan_duration;
 
                 %this is the call for the stochastic process - this is the worst case 
-                %obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
+                obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
                 
                 %pull in the routing table for the specific WO
                 r_table=js_wos(obj(i).wo_id).routing.Edges;
