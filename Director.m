@@ -23,7 +23,7 @@ classdef Director < handle
             %target node - node 3 is the finish node
             target=[3 4 2];
             %weights - ***duration of the activity***
-            weight=[10 10 10];
+            weight=[2 2 2];
             %Activity (Edge) Name
             operation={'A'; 'B'; 'C'};
             
