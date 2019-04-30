@@ -41,10 +41,10 @@ classdef Machine < handle
                 for i=1:length(obj)
                     
                 %deterministic: op_actual_duration=op_plan_duration stochastich: op_actual_duration PDF determined
-                %obj(i).op_actual_duration=obj(i).op_plan_duration;
+                obj(i).op_actual_duration=obj(i).op_plan_duration;
 
                 %this is the call for the stochastic process - this is the worst case 
-                obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
+                %obj(i).op_actual_duration=poissrnd(obj(i).op_plan_duration);
                 
                 %pull in the routing table for the specific WO
                 r_table=js_wos(obj(i).wo_id).routing.Edges;
@@ -52,8 +52,10 @@ classdef Machine < handle
                 row_index=find(strcmp(r_table.Operation,obj(i).functional_group));
                 
                 if strcmp(r_table.VendorPart(row_index),'required') || strcmp(r_table.VendorPart(row_index),'ordered')
-                    disp(['WO ',num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),' part is ',char(r_table.VendorPart(row_index)),'.']);
-                    %letting that the machine has the WO but not manufacturing
+                    %writing to the command line that the machine has the WO but not manufacturing
+                    disp(['Machine Class performWork(): WO ',num2str(obj(i).wo_id),' Operation ',...
+                        char(obj(i).functional_group),' part is ',char(r_table.VendorPart(row_index)),'.']);
+                    
                     obj(i).op_status='set-up';
                     %adding a time unit based on timer wrapper iteration to machine_hours which is the time spent on the operation
                     obj(i).op_setup_tracker=obj(i).op_setup_tracker+1;
@@ -71,8 +73,16 @@ classdef Machine < handle
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='run';
                     js_wos(obj(i).wo_id).routing.Edges.HoursWorked(row_index)=obj(i).machine_hours+obj(i).op_setup_tracker;
                     js_wos(obj(i).wo_id).status='in-work';
+                    
+                    %write to command line that the machine is working
+                    disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), ' is working on WO ',...
+                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),'.']);
                 
                 else %operation is assumed to be complete
+                    
+                    %write to command line that the machine has completed work
+                    disp(['Machine Class performWork(): Machine ',char(obj(i).full_name), 'completed WO ',...
+                        num2str(obj(i).wo_id),' Operation ',char(obj(i).functional_group),'.']);
                     
                     %update work order information
                     js_wos(obj(i).wo_id).routing.Edges.Status{row_index}='complete';
