@@ -1,4 +1,4 @@
-function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, mach)
+function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, mach, mach_no)
 %SCHEDULEVARIANCE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -22,7 +22,7 @@ if actual_duration > planned_duration
 
 end
 
-js_wos.routing.Edges.SV = planned_duration - actual_duration;
+js_wos.routing.Edges.SV(mach_no) = planned_duration - actual_duration;
 js_wos.total_SV = sum(planned_duration- actual_duration);
 
 end
