@@ -8,7 +8,7 @@ t.StopFcn = @TimerCleanup;
 t.ExecutionMode = 'singleShot';
 
 function TimerStart(mTimer,~)
-    str1 = sprintf('Begin Hour %d', count);
+    str1 = sprintf('\rBegin Hour %d', count);
     disp(str1);
 end
 
