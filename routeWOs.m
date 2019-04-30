@@ -13,6 +13,9 @@ function TimerStart(mTimer,~)
 end
 
 function readTime(mTimer,~)
+    
+    %have master schedule write to the command line which operations should be performed this clock cycle
+    planningMessage(js_sch,count,{sup.functional_group});
 
     %Vendor Class processPO method
     [ ven js_wos ] = processPO(ven,js_wos,js_sch);
