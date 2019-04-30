@@ -131,7 +131,7 @@ end
 
 for i = 1:length(js_wos)
     for j = 1:length(mach)
-    [js_wos(i)] = scheduleVariance(comm_net, js_wos(i), js_wos(i).end_date, mach(j));
+    [js_wos(i)] = scheduleVariance(comm_net, js_wos(i), js_wos(i).end_date, mach(j),j);
     end
 end
 
