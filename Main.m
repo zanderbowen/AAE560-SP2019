@@ -35,7 +35,7 @@ clc;
 %   Machines, and 1 Receiving focal.
 
 %   Create Vendor Base:
-[ven] = createVendor(1,2,5,'y');
+[ven] = createVendor(1,2,5,'n');
 %   In this case, one Vendor is used.  This Vendor is an abstract
 %   representation of a larger Vendor base, and has an early delivery
 %   requirement of 2.
@@ -146,14 +146,6 @@ max_hours = 40;
                [ t, ven, js_wos, js_sch, sup, mach ] = ...
                    routeWOs(js_wos, js_sch, ven, sup, mach, hours);
                start(t);
-%                
-%                %search for open work order (i.e. not closed or cancelled)
-%                open_wos=findobj(js_wos,'status','new','-or','status','planned','-or','status','in-work');
-%                %call closeWO method to check to see if the WO status should be set to closed
-%                open_wos=closeWO(open_wos);
-%                
-%                %calculate SV
-%                js_wos = calcSV(js_wos);%calulates SV for each step and total SV
                
                hours = hours +1;
                
