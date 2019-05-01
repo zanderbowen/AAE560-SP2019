@@ -51,7 +51,7 @@ clc;
 %-------------------------------------------------------------------------%
 
 %   Map the network via the CommunicationNetwork function:
-comm_net = CommunicationNetwork(dir, cust, sup, mach, rec, ven);
+comm_net = CommunicationNetwork2(dir, cust, sup, mach, rec, ven);
 
 %   Plot the network:
 NetworkMeasures(comm_net);
