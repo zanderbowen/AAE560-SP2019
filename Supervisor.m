@@ -47,9 +47,16 @@ classdef Supervisor < handle
                 ct=1; %assigned WO counter
                 ct2=1; %job_queue counter
                 while ct<=1 && ct2<=length(obj(i).job_queue.wo_id)  %counter inequality set to 1 b/c only a single operation will be allocated, the "k" loop is sequencing through idle machines - the while loop attempts to match an idle machine to a WO operation to be matched
+                    %find the row index in work order routing edges table that corresponds to the current functional group of obj(i)
+                    wo_op_r_index=find(strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation,obj(i).functional_group));
+                    
                     %first condition is that WO status is planned
                     %second condition is that the current time falls between the operation's early start and late start times determined by the master schedule
-                    if strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).status,'planned') && all([obj(i).job_queue.es(ct2)<=current_time, current_time<=obj(i).job_queue.ls(ct2)])
+                    if strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Status(wo_op_r_index),'planned') &&...
+                        all([obj(i).job_queue.es(ct2)<=current_time, current_time<=obj(i).job_queue.ls(ct2)])
+                    %obj(i).job_queue.es(ct2)<=current_time %this only works for serial WOs and Operations       
+
+
                         %set the machine status to running
                         f_grp_idle_machines(k).status='running';
                         %populate machine with WO information require to perform job
@@ -58,6 +65,12 @@ classdef Supervisor < handle
                         %determine the row that the WO operation lives in the WO routing table
                         row_index=find(strcmp(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation,obj(i).functional_group));
                         f_grp_idle_machines(k).vendor_part=js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.VendorPart(row_index);
+                        
+                        %display which machine, WO, op and time a machine was told to run
+                        disp(['Supervisor Class assignWork(): Machine ',char(f_grp_idle_machines(k).full_name),' was set to run WO ',...
+                            num2str(obj(i).job_queue.wo_id(ct2)),' Operation ',...
+                            char(js_wos(obj(i).job_queue.wo_id(ct2)).routing.Edges.Operation(row_index)),' at time ',...
+                            num2str(current_time),'.']);
                         
                         %initialize hours worked to zero in the machine when a new operations is assigned to it
                         f_grp_idle_machines(k).machine_hours=0;

@@ -268,6 +268,23 @@ classdef JobShopSchedule < handle
             %calculate the total slack
             master_schedule.Edges.TS=master_schedule.Edges.LS-master_schedule.Edges.ES;
         end
+        
+        %display what WO and Operation should be worked in the current clock cycle
+        function planningMessage(obj,current_time,fun_grp_vec)
+            ms_e_table=obj.master_schedule.Edges;
+            
+            r_index=[];
+            for i=1:length(fun_grp_vec)
+                r_index=[r_index; find(strcmp(ms_e_table.OperationWO,fun_grp_vec(i)))];
+            end
+            
+            [temp index]=min(abs(ms_e_table.ES(r_index)-current_time));
+            
+            disp(['Planning Message: At time ', num2str(current_time),' WO ', num2str(ms_e_table.EdgeWO(r_index(index))),...
+                ' Operation ',char(ms_e_table.OperationWO(r_index(index))),' should be worked with an Early Start of ',...
+                num2str(ms_e_table.ES(r_index(index))),'.']);
+                ms_e_table(sort(r_index),{'EdgeWO','OperationWO','ES','EF','LS','LF'})
+        end
     end
 end
 

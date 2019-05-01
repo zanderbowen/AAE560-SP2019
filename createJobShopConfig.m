@@ -6,13 +6,11 @@ function [ sup, mach ] = createJobShopConfig( no_sup, no_mach, sup, mach)
 %
 %   This function allows a user to create a single job shop configuration.
 %   The user provides the number of supervisors, machines, and receiving 
-%   focals, then inputs the number of machines assigned to a supervisor.  
-%   The function then populates the supplied object arrays.  
+%   focals, the function then populates the supplied object arrays.  
 %
 %   Inputs:
 %   no_sup      Number of Supervisors
 %   no_mach     Number of Machines
-%   mach2sup    Number of Machines Assigned to a Supervisor
 %   sup         The Previously Generated Supervisor Array
 %   mach        The Previously Generated Machine Array
 
@@ -22,7 +20,7 @@ function [ sup, mach ] = createJobShopConfig( no_sup, no_mach, sup, mach)
     %Populate Objects of Job Shop 
     %------------------------------------------
     
-    %Supervisor
+    %Supervisor - populating up to 5 supervisor objects
     for i = 1:no_sup
         if i == 1
             sup = [sup; Supervisor('A',{sup.functional_group})];
@@ -40,7 +38,7 @@ function [ sup, mach ] = createJobShopConfig( no_sup, no_mach, sup, mach)
         end
     end       
     
-    %Machines:
+    %Machines - populating machines assigned to the supervisor objects
     if no_sup == 1
         for i=1:no_mach
             mach = [mach; Machine('A',{sup.functional_group},i,[mach.full_name],8)];

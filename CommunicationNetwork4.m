@@ -1,4 +1,4 @@
-function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
+function [comm_net] = CommunicationNetwork4(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
 
 %*** Small World-ish Network Where Machines Connects to Director ***
 
@@ -71,4 +71,3 @@ for i=1:length(ven_vec)
     weight = 4;
     comm_net=addedge(comm_net,source,target,weight);
 end
-

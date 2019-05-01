@@ -1,4 +1,4 @@
-function [comm_net] = CommunicationNetwork(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
+function [comm_net] = CommunicationNetwork5(dir_vec,cust_vec,sup_vec, mach_vec, rec_vec, ven_vec)
 
 %*** Small World-ish Network Where Machines Connects to Receiving Directly ***
 
