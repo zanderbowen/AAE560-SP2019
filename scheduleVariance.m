@@ -72,7 +72,7 @@ if actual_duration > planned_duration
 end
 
 js_wos.routing.Edges.SV(mach_no) = planned_duration - actual_duration;
-js_wos.total_SV = sum(planned_duration- actual_duration);
+js_wos.total_SV = sum(js_wos.routing.Edges.SV);
 
 end
 
