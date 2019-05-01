@@ -9,7 +9,7 @@ for i=1:length(js_wos)
         
         for j = 1:ops
             if r(j) == 1
-            %js_wos(i).routing.Edges.VendorPart{j}='required';
+            js_wos(i).routing.Edges.VendorPart{j}='required';
             end
         end
     end
