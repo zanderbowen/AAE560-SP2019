@@ -11,45 +11,45 @@ target = comm_net.Edges.EndNodes(:,2);
 weights = comm_net.Edges.Weight;
 G = graph(source, target, weights);
 
-if sum(strcmp(operation,'A')) > 0
+if strcmp(operation,'A')
 
     [dir_P, d_length] = shortestpath(G,'Director','Machine.A1');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.A1');
 
-    dir_time_reduction = 1/d_length*10;
-    ven_time_reduction = 1/v_length*10;
+    dir_time_reduction = 10/d_length;
+    ven_time_reduction = 10/v_length;
     
-elseif sum(strcmp(operation,'B')) > 0
+elseif strcmp(operation,'B')
         
     [dir_P, d_length] = shortestpath(G,'Director','Machine.B2');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.B2');
 
-    dir_time_reduction = 1/d_length*10;
-    ven_time_reduction = 1/v_length*10;
+    dir_time_reduction = 10/d_length;
+    ven_time_reduction = 10/v_length;
     
-elseif sum(strcmp(operation,'C')) > 0
+elseif strcmp(operation,'C')
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.C3');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.C3');
 
-    dir_time_reduction = 1/d_length*10;
-    ven_time_reduction = 1/v_length*10;
+    dir_time_reduction = 10/d_length;
+    ven_time_reduction = 10/v_length;
     
-elseif sum(strcmp(operation,'D')) > 0
+elseif strcmp(operation,'D')
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.D4');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.D4');
 
-    dir_time_reduction = 1/d_length*10;
-    ven_time_reduction = 1/v_length*10;
+    dir_time_reduction = 10/d_length;
+    ven_time_reduction = 10/v_length;
     
-elseif sum(strcmp(operation,'E')) > 0
+elseif strcmp(operation,'E')
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.E5');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.E5');
 
-    dir_time_reduction = 1/d_length*10;
-    ven_time_reduction = 1/v_length*10;
+    dir_time_reduction = 10/d_length;
+    ven_time_reduction = 10/v_length;
     
 else
     disp('Too many machines!');
