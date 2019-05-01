@@ -16,40 +16,40 @@ if mach_no == 1
     [dir_P, d_length] = shortestpath(G,'Director','Machine.A1');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.A1');
 
-    dir_time_reduction = 1/d_length;
-    ven_time_reduction = 1/v_length;
+    dir_time_reduction = 1/d_length*10;
+    ven_time_reduction = 1/v_length*10;
     
 elseif mach_no == 2
         
     [dir_P, d_length] = shortestpath(G,'Director','Machine.B2');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.B2');
 
-    dir_time_reduction = 1/d_length;
-    ven_time_reduction = 1/v_length;
+    dir_time_reduction = 1/d_length*10;
+    ven_time_reduction = 1/v_length*10;
     
 elseif mach_no == 3
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.C3');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.C3');
 
-    dir_time_reduction = 1/d_length;
-    ven_time_reduction = 1/v_length;
+    dir_time_reduction = 1/d_length*10;
+    ven_time_reduction = 1/v_length*10;
     
 elseif mach_no == 4
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.D4');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.D4');
 
-    dir_time_reduction = 1/d_length;
-    ven_time_reduction = 1/v_length;
+    dir_time_reduction = 1/d_length*10;
+    ven_time_reduction = 1/v_length*10;
     
 elseif mach_no == 5
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.E5');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.E5');
 
-    dir_time_reduction = 1/d_length;
-    ven_time_reduction = 1/v_length;
+    dir_time_reduction = 1/d_length*10;
+    ven_time_reduction = 1/v_length*10;
     
 else
     disp('Too many machines!');
