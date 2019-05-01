@@ -1,5 +1,13 @@
 function [js_wos] = routing( js_wos, dir )
 
+%The purpose of this function is to allow the Director object to populate
+%the necessary scheduling fields in the work order object, which will be
+%read by the various objects performing the assigned tasks.  The function
+%determines the number of work orders, then uses the "generateRouting"
+%function found in the Director class.  Finally, each work order is
+%randomly assigned a vendor part requirement, using a random integer
+%generator to achieve stochastic behavior.
+
 for i=1:length(js_wos)
     if strcmp(js_wos(i).status,'new')
         [js_wos(i).routing,js_wos(i).status]=generateRouting(dir);
