@@ -51,7 +51,7 @@ clc;
 %-------------------------------------------------------------------------%
 
 %   Map the network via the CommunicationNetwork function:
-comm_net = CommunicationNetwork2(dir, cust, sup, mach, rec, ven);
+comm_net = CommunicationNetwork(dir, cust, sup, mach, rec, ven);
 
 %   Plot the network:
 NetworkMeasures(comm_net);
@@ -131,7 +131,7 @@ end
 
 for i = 1:length(js_wos)
     for j = 1:length(mach)
-    [js_wos(i)] = scheduleVariance(comm_net, js_wos(i), js_wos(i).end_date, mach(j),j);
+    [actual_duration(i,j), total_time_reduction(i,j), js_wos(i)] = scheduleVariance(comm_net, js_wos(i), js_wos(i).routing.Edges.Weight(j), js_wos(i).routing.Edges.Operation(j),j);
     end
 end
 
