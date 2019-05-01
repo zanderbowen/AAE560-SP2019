@@ -4,6 +4,7 @@ function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, mach, m
 
 %For a given machine, representing the work required on a work order
 actual_duration=poissrnd(planned_duration);
+part_delivery_delay=poissrnd(5);
 
 source = comm_net.Edges.EndNodes(:,1);
 target = comm_net.Edges.EndNodes(:,2);
@@ -56,11 +57,18 @@ else
 end
     
 
-
 if actual_duration > planned_duration
-    total_time_reduction = dir_time_reduction + ven_time_reduction;
-    actual_duration = actual_duration - total_time_reduction;
-
+    
+    if js_wos.routing.Edges.VendorPart(mach_no) == 1
+        
+        total_time_reduction = dir_time_reduction + ven_time_reduction;
+        actual_duration = actual_duration - total_time_reduction + part_delivery_delay;
+    
+    else
+        total_time_reduction = dir_time_reduction;
+        actual_duration = actual_duration - total_time_reduction;
+    end
+    
 end
 
 js_wos.routing.Edges.SV(mach_no) = planned_duration - actual_duration;
