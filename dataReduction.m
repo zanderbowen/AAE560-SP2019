@@ -7,7 +7,7 @@ SV_sum=sum(total_SV_vec);
 %generate a histogram of total variances
 figure;
 histogram(total_SV_vec);
-xlabel('Schedule Variance - Status Quo');
+xlabel('Schedule Variance - Network 1');
 
 %calculated mean total SV
 mean_SV=mean(total_SV_vec);
