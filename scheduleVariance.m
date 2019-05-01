@@ -1,4 +1,4 @@
-function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, mach, mach_no)
+function [actual_duration, total_time_reduction, js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, operation, mach_no)
 %SCHEDULEVARIANCE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,7 +11,7 @@ target = comm_net.Edges.EndNodes(:,2);
 weights = comm_net.Edges.Weight;
 G = graph(source, target, weights);
 
-if mach_no == 1
+if sum(strcmp(operation,'A')) > 0
 
     [dir_P, d_length] = shortestpath(G,'Director','Machine.A1');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.A1');
@@ -19,7 +19,7 @@ if mach_no == 1
     dir_time_reduction = 1/d_length*10;
     ven_time_reduction = 1/v_length*10;
     
-elseif mach_no == 2
+elseif sum(strcmp(operation,'B')) > 0
         
     [dir_P, d_length] = shortestpath(G,'Director','Machine.B2');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.B2');
@@ -27,7 +27,7 @@ elseif mach_no == 2
     dir_time_reduction = 1/d_length*10;
     ven_time_reduction = 1/v_length*10;
     
-elseif mach_no == 3
+elseif sum(strcmp(operation,'C')) > 0
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.C3');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.C3');
@@ -35,7 +35,7 @@ elseif mach_no == 3
     dir_time_reduction = 1/d_length*10;
     ven_time_reduction = 1/v_length*10;
     
-elseif mach_no == 4
+elseif sum(strcmp(operation,'D')) > 0
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.D4');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.D4');
@@ -43,7 +43,7 @@ elseif mach_no == 4
     dir_time_reduction = 1/d_length*10;
     ven_time_reduction = 1/v_length*10;
     
-elseif mach_no == 5
+elseif sum(strcmp(operation,'E')) > 0
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.E5');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.E5');
@@ -68,6 +68,9 @@ if actual_duration > planned_duration
         total_time_reduction = dir_time_reduction;
         actual_duration = actual_duration - total_time_reduction;
     end
+    
+else
+    total_time_reduction = 0;
     
 end
 
