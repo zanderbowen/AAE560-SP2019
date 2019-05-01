@@ -1,17 +1,25 @@
 function [ t, ven, js_wos, js_sch, sup, mach ] = routeWOs(js_wos, js_sch, ven, sup, mach, count)
 
-t = timer;
-%t.UserData = count;
-t.StartFcn = @TimerStart;
-t.TimerFcn = @readTime;
-t.StopFcn = @TimerCleanup;
-t.ExecutionMode = 'singleShot';
+%This function generates a timer, with the intent of moving one time step
+%forward and progressing activity in the job shop accordingly.  The intent
+%is to use this function in a loop to control the length of time the job
+%shop activity is observed and analyzed.
 
+%Generate timer and set timer parameters
+t = timer;
+t.StartFcn = @TimerStart;   %function to perform when timer is initiated
+t.TimerFcn = @readTime;     %function to timer performs
+t.StopFcn = @TimerCleanup;  %function to perform when timer is finished
+t.ExecutionMode = 'singleShot'; %limits the timer to a single execution
+
+%Starting function - used to alert the user what time job shop activity is 
+%taking place
 function TimerStart(mTimer,~)
-    str1 = sprintf('\rBegin Hour %d', count);
+    str1 = sprintf('Begin Hour %d', count);
     disp(str1);
 end
 
+%Timer function
 function readTime(mTimer,~)
     
     %have master schedule write to the command line which operations should be performed this clock cycle
@@ -36,7 +44,7 @@ function readTime(mTimer,~)
     end
     clear i
     
-      %machien performs work
+    %machine performs work
     [run_machines js_wos]=performWork(findobj(mach,'status','running'),js_wos);
 
     %search for work orders with status in-work
@@ -60,7 +68,8 @@ function readTime(mTimer,~)
    js_wos = calcSV(js_wos);%calulates SV for each step and total SV
 end
 
-
+%Stopping function - used to alert the user what time job shop activity is 
+%finished, then delete the timer object
 function [time] = TimerCleanup(mTimer,~)
     str2 = sprintf('End Hour %d', count);
     disp(str2);
