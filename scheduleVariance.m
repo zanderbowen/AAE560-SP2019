@@ -1,16 +1,41 @@
-function [actual_duration, total_time_reduction, js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, operation, mach_no)
-%SCHEDULEVARIANCE Summary of this function goes here
-%   Detailed explanation goes here
+function [js_wos] = scheduleVariance(comm_net, js_wos, planned_duration, operation, mach_no)
 
-%For a given machine, representing the work required on a work order
+%--------------------------------------------------------------------------
+%SCHEDULEVARIANCE   Function that calculates schedule variance of a
+%                   selected network stochastically
+%
+%   This function allows a user to calculate schedule variance in a 
+%   stochastic manner. The user provides the communication network being
+%   used, the work order, the expected duration, what operation within the
+%   work order is being performed. The function then generates the actual
+%   time it will take to peform the operation in a stochastic manner (using
+%   poissrnd).  The function then determines the shortest path bewteen the
+%   machine performing work and the directo & vendors, which dictates the
+%   time penalty/improvement experienced in different networks.  The
+%   function then calculates the schedule variance and adds it to the work
+%   order.
+%
+%   Inputs:
+%   comm_net            Network from Communications Network function
+%   js_wos              The job shop work order being worked
+%   planned_duration    The expected duration of the operation
+%   operation           Which operation is being performed
+%   mach_no             The machine number corresponding to the operation
+%--------------------------------------------------------------------------
+
+%   Gernate the actual time required to perform the taks
 actual_duration=poissrnd(planned_duration);
 part_delivery_delay=poissrnd(5);
 
+%   Determine sources, targets, and weights from the supplier network
 source = comm_net.Edges.EndNodes(:,1);
 target = comm_net.Edges.EndNodes(:,2);
 weights = comm_net.Edges.Weight;
 G = graph(source, target, weights);
 
+%   Calculate shortest path (and therefore time reductions) for each
+%   machine.  The node names must match those of assigned in the
+%   Communication Network function. 
 if strcmp(operation,'A')
 
     [dir_P, d_length] = shortestpath(G,'Director','Machine.A1');
@@ -56,7 +81,7 @@ else
         
 end
     
-
+%   Determine time reduction and the impact it has to actual duration
 if actual_duration > planned_duration
     
     if sum(strcmp(js_wos.routing.Edges.VendorPart(mach_no),'required')) > 0
@@ -74,6 +99,7 @@ else
     
 end
 
+%   Calculate schedule variance
 js_wos.routing.Edges.SV(mach_no) = planned_duration - actual_duration;
 js_wos.total_SV = sum(js_wos.routing.Edges.SV);
 
