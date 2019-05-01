@@ -42,7 +42,7 @@ elseif mach_no == 4
     dir_time_reduction = 1/d_length;
     ven_time_reduction = 1/v_length;
     
-elseif
+elseif mach_no == 5
     
     [dir_P, d_length] = shortestpath(G,'Director','Machine.E5');
     [ven_P, v_length] = shortestpath(G,'Vendor.1','Machine.E5');
