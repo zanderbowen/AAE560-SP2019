@@ -10,7 +10,9 @@ function [ ven ] = createVendor( no_ven, early_delivery, del_lambda, stoch )
 %   Inputs:
 %   no_ven          Number of Vendors
 %   early_delivery  Time Units that Job Shop Desires an Early Delivery
-%--------------------------------------------------------------------------
+%   del_lambda      Property to define stochastic behavior range
+%   stoch           Switch to initiate stochastic behavior
+%--------------------------- -----------------------------------------------
 
     %------------------------------------------
     %Instantiate Objects of Vendors
