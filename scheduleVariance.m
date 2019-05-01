@@ -59,7 +59,7 @@ end
 
 if actual_duration > planned_duration
     
-    if js_wos.routing.Edges.VendorPart(mach_no) == 1
+    if sum(strcmp(js_wos.routing.Edges.VendorPart(mach_no),'required')) > 0
         
         total_time_reduction = dir_time_reduction + ven_time_reduction;
         actual_duration = actual_duration - total_time_reduction + part_delivery_delay;
