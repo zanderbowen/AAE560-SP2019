@@ -112,7 +112,7 @@ js_wos=updateDates(js_wos,revised_wo_dates);
 %display the master_schedule before any operations are run Edges table
 js_sch.master_schedule.Edges;
 
-plot_master=1;
+plot_master=0;
 
 %plotting the graph of the network schedule - flag to plot is at top of code
 if plot_master==1
