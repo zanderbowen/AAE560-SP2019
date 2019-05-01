@@ -98,34 +98,38 @@ js_wos=WorkOrder.empty;
 %Director sets up routing
 [js_wos] = routing( js_wos, dir );
 
-%instantiate Job Shop Schedule object
-%the value passed into the function is the buffer time the director would
-%set between work orders
-js_sch=JobShopSchedule(2);
+theLoad = 0;
 
-%add WOs to master schedule
-[js_sch.master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
-for i=1:length(wo_ef_initial.id)
-    js_wos(wo_ef_initial.id(i)).initial_start_edge_EF=wo_ef_initial.ef(i);
-end
-clear wo_ef_initial
-%update start and end dates and master_schedule flag
-js_wos=updateDates(js_wos,revised_wo_dates);
+if theLoad == 1;
+    %instantiate Job Shop Schedule object
+    %the value passed into the function is the buffer time the director would
+    %set between work orders
+    js_sch=JobShopSchedule(2);
 
-%display the master_schedule before any operations are run Edges table
-js_sch.master_schedule.Edges;
+    %add WOs to master schedule
+    [js_sch.master_schedule,revised_wo_dates,wo_ef_initial]=addWoToMasterSchedule(js_sch,js_wos(masterSchedule(dir, js_wos)));
+    for i=1:length(wo_ef_initial.id)
+        js_wos(wo_ef_initial.id(i)).initial_start_edge_EF=wo_ef_initial.ef(i);
+    end
+    clear wo_ef_initial
+    %update start and end dates and master_schedule flag
+    js_wos=updateDates(js_wos,revised_wo_dates);
 
-plot_master=0;
+    %display the master_schedule before any operations are run Edges table
+    js_sch.master_schedule.Edges;
 
-%plotting the graph of the network schedule - flag to plot is at top of code
-if plot_master==1
-    figure;
-    h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
-    %try to layout the graph a little more like a Gantt Chart
-    layout(h,'layered','Direction','right','Sources',1);
-    %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
-    % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
-    % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+    plot_master=0;
+
+    %plotting the graph of the network schedule - flag to plot is at top of code
+    if plot_master==1
+        figure;
+        h=plot(js_sch.master_schedule,'EdgeLabel',js_sch.master_schedule.Edges.EdgeLabel);
+        %try to layout the graph a little more like a Gantt Chart
+        layout(h,'layered','Direction','right','Sources',1);
+        %layout(h,'force','WeightEffect','direct'); - won't work with 0 edge weights
+        % % [HideNodeNames{1:numnodes(js_sch.master_schedule)}]=deal('');
+        % %needs some work... labelnode(h,unique([source target]),HideNodeNames);
+    end
 end
 
 %-------------------------------------------------------------------------%
